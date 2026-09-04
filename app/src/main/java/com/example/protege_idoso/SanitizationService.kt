@@ -29,14 +29,46 @@ object SanitizationService {
         return texto.replace(regex, "[TELEFONE]")
     }
 
-    private fun sanitizarCpfs(texto: String): String {
-        val regexComMascara = Regex("(?<!\\d)\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}(?!\\d)")
-        val regexSemMascara = Regex("(?<!\\d)\\d{11}(?!\\d)")
+    private fun sanitizarCpfs (texto: String) : String {
+        val regexComMascara =
+            Regex("(?<!\\d)\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}(?!\\d)")
+
+        val regexSemMascara =
+            Regex ("(?<!\\d)\\d{11}(?!\\d)")
 
         var resultado = texto.replace(regexComMascara, "[CPF]")
-        resultado = resultado.replace(regexSemMascara, "[CPF]")
 
-        return resultado
+        resultado = regexSemMascara.replace(resultado) { match ->
+            val cpf = match.value
+
+            if (cpfValido(cpf)){
+                "[CPF]"
+            } else {
+                cpf
+            }
+        }
+        return  resultado
+    }
+
+    private fun cpfValido (cpf: String): Boolean{
+        if(cpf.length !=11) return false
+        if(cpf.all {it == cpf[0] }) return false
+        var soma = 0
+        for (i in 0 until 9){
+            soma += cpf[i].digitToInt() * (10 - i)
+        }
+        var resto = soma % 11
+        val primeiroDigito = if (resto < 2) 0 else 11 - resto
+        if (cpf[9].digitToInt() != primeiroDigito){
+            return false
+        }
+        soma = 0
+        for (i in 0 until 10){
+            soma += cpf[i].digitToInt() * (11 - i)
+        }
+        resto = soma % 11
+        val segundoDigito = if (resto < 2) 0 else 11 - resto
+        return cpf[10].digitToInt() == segundoDigito
     }
 
     private fun sanitizarLinks(texto: String): String {
