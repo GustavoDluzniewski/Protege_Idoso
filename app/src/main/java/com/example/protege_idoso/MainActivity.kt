@@ -25,9 +25,6 @@ class MainActivity : ComponentActivity() {
 
     private val pedirPermissaoNotificacao =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { permitido ->
-            // Por enquanto não precisa fazer nada aqui.
-            // Se permitido = true, o app pode mostrar notificações.
-            // Se permitido = false, o usuário negou.
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -7,8 +7,8 @@ object SanitizationService {
         var texto = mensagem
 
         texto = sanitizarEmails(texto)
-        texto = sanitizarTelefones(texto)
         texto = sanitizarCpfs(texto)
+        texto = sanitizarTelefones(texto)
         texto = sanitizarLinks(texto)
         texto = sanitizarChavesPix(texto)
 
@@ -79,17 +79,26 @@ object SanitizationService {
         return texto.replace(regex, "[LINK]")
     }
     private fun sanitizarChavesPix(texto: String): String {
-       val regexEvp = Regex(
-           "(?i)[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-       )
-       val regexPixComPrefixo = Regex(
-           "(?i)(pix\\s*[:\\-]?\\s*)([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|\\+?\\d{10,13}|[0-9]{11}|[0-9]{14})"
 
-       )
+        val regexEvp = Regex(
+            "(?i)[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+        )
 
-       var resultado = texto.replace(regexEvp, "[CHAVE_PIX")
-       resultado = resultado.replace(regexPixComPrefixo, "$1[CHAVE_PIX]")
+        val regexPixComPrefixo = Regex(
+            "(?i)(\\b(?:minha\\s+)?chave\\s+pix\\s*(?:é|e|:|-)?\\s*|\\bpix\\s*(?:é|e|:|-)?\\s*)(" +
+                    "[0-9]{14}|" +
+                    "\\+?\\d{10,13}|" +
+                    "[0-9]{11}" +
+                    ")"
+        )
 
-       return resultado
+        var resultado = texto.replace(regexEvp, "[CHAVE_PIX]")
+
+        resultado = resultado.replace(regexPixComPrefixo) { match ->
+            val prefixo = match.groupValues[1]
+            "$prefixo[CHAVE_PIX]"
+        }
+
+        return resultado
     }
 }
