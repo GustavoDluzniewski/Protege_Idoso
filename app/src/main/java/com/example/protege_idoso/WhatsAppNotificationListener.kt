@@ -50,6 +50,11 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             return
         }
 
+        val mensagemSanitizada = SanitizationService.sanitizeMessage(mensagemFinal)
+
+        Log.d("ProtegeIdoso", "Mensagem original: $mensagemFinal")
+        Log.d("ProtegeIdoso", "Mensagem sanitizada: $mensagemSanitizada")
+
         val agora = System.currentTimeMillis()
         val chaveMensagem = "$remetente|$mensagemFinal"
 
@@ -85,7 +90,7 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                 try {
                     Log.d("ProtegeIdoso", "Enviando mensagem para IA...")
 
-                    val resultadoFinal = OpenAIRiskAnalyzer.analisarMensagem(mensagemFinal)
+                    val resultadoFinal = OpenAIRiskAnalyzer.analisarMensagem(mensagemSanitizada)
 
                     Log.d("ProtegeIdoso", "Resultado final: ${resultadoFinal.nivel}")
                     Log.d("ProtegeIdoso", "Explicação: ${resultadoFinal.explicacao}")

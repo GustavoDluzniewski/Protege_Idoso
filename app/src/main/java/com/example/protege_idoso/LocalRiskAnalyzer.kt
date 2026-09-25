@@ -12,7 +12,7 @@ object LocalRiskAnalyzer {
                 RiskResult(
                     nivel = RiskLevel.POSSIVEL_GOLPE,
                     explicacao = "A mensagem possui sinais fortes de golpe, como pedido de senha, código, PIX, prêmio ou urgência.",
-                    orientacao = "Não clique em links, não envie dinheiro e não informe senhas ou códigos. Confirme com alguém de confiança antes de responder."
+                    orientacao = "Não clique em links, não envie dinheiro e não informe senhas ou códigos. Confirme com uma pessoa de confiança antes de responder."
                 )
             }
 

@@ -261,4 +261,76 @@ class SanitizationServiceTest {
         )
         println(resultado)
     }
+    @Test
+    fun deveSanitizarMensagemRealistaDoWhatsApp() {
+
+        val texto = """
+        Olá, João!
+        
+        Seu cadastro foi aprovado.
+        CPF: 529.982.247-25
+        Telefone: (69) 99999-9999
+        E-mail: joao.silva@gmail.com
+        
+        Para receber o pagamento, envie sua chave Pix:
+        12345678000195
+        
+        Acesse o link para confirmar:
+        https://exemplo.com.br/confirmar?id=12345
+    """.trimIndent()
+
+        val resultado = SanitizationService.sanitizeMessage(texto)
+
+        assertEquals(
+            """
+        Olá, João!
+        
+        Seu cadastro foi aprovado.
+        CPF: [CPF]
+        Telefone: [TELEFONE]
+        E-mail: [EMAIL]
+        
+        Para receber o pagamento, envie sua chave Pix:
+        [CHAVE_PIX]
+        
+        Acesse o link para confirmar:
+        [LINK]
+        """.trimIndent(),
+            resultado
+        )
+        println(resultado)
+    }
+    @Test
+    fun deveSanitizarMensagemDePossivelGolpe() {
+        val texto = """
+        PARABÉNS! Você ganhou R$ 5.000,00!
+        
+        Para receber seu prêmio, confirme seus dados.
+        CPF: 529.982.247-25
+        Telefone: (69) 99999-9999
+        Pix: 12345678000195
+        
+        Acesse imediatamente:
+        https://exemplo.com.br/premio
+    """.trimIndent()
+
+        val resultado = SanitizationService.sanitizeMessage(texto)
+
+        assertEquals(
+            """
+        PARABÉNS! Você ganhou R$ 5.000,00!
+        
+        Para receber seu prêmio, confirme seus dados.
+        CPF: [CPF]
+        Telefone: [TELEFONE]
+        Pix: [CHAVE_PIX]
+        
+        Acesse imediatamente:
+        [LINK]
+        """.trimIndent(),
+            resultado
+        )
+        println(texto)
+        println(resultado)
+    }
 }

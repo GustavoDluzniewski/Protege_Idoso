@@ -116,6 +116,16 @@ object OpenAIRiskAnalyzer {
 
             val json = JsonParser.parseString(respostaCompleta).asJsonObject
 
+            val usage = json.getAsJsonObject("usage")
+
+            val inputTokens = usage.get("input_tokens").asInt
+            val outputTokens = usage.get("output_tokens").asInt
+            val totalTokens = usage.get("total_tokens").asInt
+
+            Log.d("ProtegeIdoso", "Tokens de entrada: $inputTokens")
+            Log.d("ProtegeIdoso", "Tokens de saída: $outputTokens")
+            Log.d("ProtegeIdoso", "Total de tokens: $totalTokens")
+
             val output = json.getAsJsonArray("output")
                 ?: throw Exception("Campo 'output' não encontrado na resposta")
 

@@ -34,7 +34,7 @@ object AlertHelper {
 
         val notificacao = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("Possível golpe detectado")
+            .setContentTitle("POSSÍVEL GOLPE DETECTADO")
             .setContentText("Atenção! Esta mensagem pode ser um golpe.")
             .setStyle(
                 NotificationCompat.BigTextStyle()
