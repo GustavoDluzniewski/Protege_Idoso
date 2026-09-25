@@ -52,7 +52,7 @@ class WhatsAppNotificationListener : NotificationListenerService() {
 
         val mensagemSanitizada = SanitizationService.sanitizeMessage(mensagemFinal)
 
-        Log.d("ProtegeIdoso", "Mensagem original: $mensagemFinal")
+
         Log.d("ProtegeIdoso", "Mensagem sanitizada: $mensagemSanitizada")
 
         val agora = System.currentTimeMillis()
@@ -66,7 +66,7 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         ultimaMensagemAnalisada = chaveMensagem
         ultimoHorarioAnalise = agora
 
-        Log.d("ProtegeIdoso", "Mensagem capturada: $mensagemFinal")
+        
 
         val resultadoLocal = LocalRiskAnalyzer.analisarMensagem(mensagemFinal)
 
