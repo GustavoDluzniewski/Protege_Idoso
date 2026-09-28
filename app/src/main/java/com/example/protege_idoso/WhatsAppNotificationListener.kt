@@ -66,7 +66,7 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         ultimaMensagemAnalisada = chaveMensagem
         ultimoHorarioAnalise = agora
 
-        
+
 
         val resultadoLocal = LocalRiskAnalyzer.analisarMensagem(mensagemFinal)
 

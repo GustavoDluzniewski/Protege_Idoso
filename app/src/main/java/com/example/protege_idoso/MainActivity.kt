@@ -20,8 +20,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
+
+    private fun abrirDisqueDenuncia(context: android.content.Context) {
+
+        val numero = "556932168940"
+
+        val mensagem = """
+        Olá. Estou recebendo mensagens que podem ser uma tentativa de golpe.
+        
+        Gostaria de orientação sobre como proceder e, se necessário, realizar uma denúncia.
+        
+        Tenho as mensagens recebidas e outras informações que podem ajudar na denúncia.
+    """.trimIndent()
+
+        val url = "https://wa.me/$numero?text=${Uri.encode(mensagem)}"
+
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Não foi possível abrir o WhatsApp.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
     private val pedirPermissaoNotificacao =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { permitido ->
@@ -32,7 +62,17 @@ class MainActivity : ComponentActivity() {
 
         pedirPermissaoParaMostrarNotificacoes()
 
-        setContent {
+        setContent{
+            Button(
+                onClick = {
+                    abrirDisqueDenuncia(this)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text("Preciso de ajuda")
+            }
             ProtegeIdosoScreen(
                 onAbrirConfiguracoes = {
                     val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)

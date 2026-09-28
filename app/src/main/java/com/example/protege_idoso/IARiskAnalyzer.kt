@@ -25,7 +25,6 @@ object OpenAIRiskAnalyzer {
 
                 val respostaTexto = enviarParaOpenAI(prompt)
 
-                Log.d("ProtegeIdoso", "Texto retornado pela OpenAI: $respostaTexto")
 
                 converterRespostaParaRiskResult(respostaTexto)
 
@@ -83,7 +82,8 @@ object OpenAIRiskAnalyzer {
             {
               "model": "gpt-4.1-nano",
               "input": ${gson.toJson(prompt)},
-              "temperature": 0.2
+              "temperature": 0.2,
+              "store": false
             }
         """.trimIndent()
 
@@ -112,7 +112,6 @@ object OpenAIRiskAnalyzer {
                 throw Exception("Erro na OpenAI: ${response.code} - $respostaCompleta")
             }
 
-            Log.d("ProtegeIdoso", "Resposta completa OpenAI: $respostaCompleta")
 
             val json = JsonParser.parseString(respostaCompleta).asJsonObject
 
@@ -157,7 +156,6 @@ object OpenAIRiskAnalyzer {
             .replace("```", "")
             .trim()
 
-        Log.d("ProtegeIdoso", "JSON limpo para conversão: $textoLimpo")
 
         val json = JsonParser.parseString(textoLimpo).asJsonObject
 
