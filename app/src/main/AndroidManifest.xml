@@ -5,7 +5,12 @@
 
     <application
             android:allowBackup="true"
-            android:label="ProtegeIdoso">
+            android:label="ProtegeIdoso"
+            android:theme="@style/Theme.Protege_Idoso">
+
+        <activity
+                android:name=".InstrucoesActivity"
+                android:exported="false" />
 
         <activity
                 android:name=".MainActivity"
