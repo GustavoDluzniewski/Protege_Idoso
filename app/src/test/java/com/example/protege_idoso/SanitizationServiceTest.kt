@@ -6,6 +6,74 @@ import org.junit.Assert.assertEquals
 class SanitizationServiceTest {
 
     @Test
+    fun deveIdentificarSinaisBasicosDeRisco() {
+        assertEquals(
+            RiskLevel.SEGURO,
+            LocalRiskAnalyzer.analisarMensagem("oii gus fzd?").nivel
+        )
+
+        assertEquals(
+            RiskLevel.SEGURO,
+            LocalRiskAnalyzer.analisarMensagem("[CPF]").nivel
+        )
+
+        assertEquals(
+            RiskLevel.SEGURO,
+            LocalRiskAnalyzer.analisarMensagem("[EMAIL]").nivel
+        )
+
+        assertEquals(
+            RiskLevel.SEGURO,
+            LocalRiskAnalyzer.analisarMensagem("[TELEFONE]").nivel
+        )
+
+        assertEquals(
+            RiskLevel.SUSPEITO,
+            LocalRiskAnalyzer.analisarMensagem("[LINK]").nivel
+        )
+
+        assertEquals(
+            true,
+            LocalRiskAnalyzer.deveEnviarParaIA("[LINK]")
+        )
+
+        assertEquals(
+            RiskLevel.POSSIVEL_GOLPE,
+            LocalRiskAnalyzer.analisarMensagem("[LINK] confirme seus dados").nivel
+        )
+    }
+
+
+    @Test
+    fun mensagemNormalDeveSerSegura() {
+        val resultado = LocalRiskAnalyzer.analisarMensagem("oii gus fzd?")
+
+        assertEquals(
+            RiskLevel.SEGURO,
+            resultado.nivel
+        )
+    }
+
+
+    @Test
+    fun deveSanitizarCpfETelefone() {
+        assertEquals(
+            "[CPF]",
+            SanitizationService.sanitizeMessage("02308953284")
+        )
+
+        assertEquals(
+            "[TELEFONE]",
+            SanitizationService.sanitizeMessage("69981432002")
+        )
+
+        assertEquals(
+            "[TELEFONE]",
+            SanitizationService.sanitizeMessage("(69) 98143-2002")
+        )
+    }
+
+    @Test
     fun deveSanitizarDadosPessoais() {
 
         val mensagem = """
@@ -18,11 +86,6 @@ class SanitizationServiceTest {
 
         val resultado = SanitizationService.sanitizeMessage(mensagem)
 
-        println("===== ORIGINAL =====")
-        println(mensagem)
-
-        println("===== SANITIZADA =====")
-        println(resultado)
 
         assertEquals(
             """
@@ -89,7 +152,7 @@ class SanitizationServiceTest {
             "Entre no site [LINK] para consultar.",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarLinkComCaminhoEParametros() {
@@ -101,7 +164,7 @@ class SanitizationServiceTest {
             "Clique aqui: [LINK]",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixAleatoria() {
@@ -113,7 +176,7 @@ class SanitizationServiceTest {
             "Minha chave Pix é [CHAVE_PIX].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixCpf() {
@@ -125,7 +188,7 @@ class SanitizationServiceTest {
             "Minha chave Pix é [CPF].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixTelefone() {
@@ -137,7 +200,7 @@ class SanitizationServiceTest {
             "\nMinha chave Pix é [TELEFONE].\n",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixEmail() {
@@ -149,7 +212,7 @@ class SanitizationServiceTest {
             "Minha chave Pix é [EMAIL].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixCnpj() {
@@ -161,7 +224,7 @@ class SanitizationServiceTest {
             "Minha chave Pix: [CHAVE_PIX].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarMensagemCompleta() {
@@ -187,7 +250,7 @@ class SanitizationServiceTest {
         """.trimIndent(),
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixSemDoisPontos() {
@@ -199,7 +262,7 @@ class SanitizationServiceTest {
             "Minha chave Pix é [CHAVE_PIX].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixSemSeparador() {
@@ -211,7 +274,7 @@ class SanitizationServiceTest {
             "Pix [CHAVE_PIX].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixComTextoChave() {
@@ -223,7 +286,7 @@ class SanitizationServiceTest {
             "Chave Pix [CHAVE_PIX].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarChavePixComDoisPontos() {
@@ -235,7 +298,7 @@ class SanitizationServiceTest {
             "Pix: [CHAVE_PIX].",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun naoDeveSanitizarNumeroDe14DigitosSemContextoPix() {
@@ -247,7 +310,7 @@ class SanitizationServiceTest {
             "O código da operação é 12345678000195.",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun naoDeveSanitizarPixSemChave() {
@@ -259,7 +322,7 @@ class SanitizationServiceTest {
             "Hoje vou fazer um pagamento via Pix para a loja.",
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarMensagemRealistaDoWhatsApp() {
@@ -298,7 +361,7 @@ class SanitizationServiceTest {
         """.trimIndent(),
             resultado
         )
-        println(resultado)
+
     }
     @Test
     fun deveSanitizarMensagemDePossivelGolpe() {
@@ -330,7 +393,5 @@ class SanitizationServiceTest {
         """.trimIndent(),
             resultado
         )
-        println(texto)
-        println(resultado)
     }
 }
