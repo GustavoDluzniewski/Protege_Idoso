@@ -2,10 +2,14 @@ package com.example.protege_idoso
 
 object LocalRiskAnalyzer {
 
-    fun analisarMensagem(mensagem: String): RiskResult {
+    fun analisarMensagem(
+        mensagem: String,
+        dominioForaDoRanking: Boolean = false
+    ): RiskResult {
         val texto = mensagem.lowercase()
 
-        val sinais = contarSinaisDeRisco(texto)
+        val sinais = contarSinaisDeRisco(texto) +
+                if (dominioForaDoRanking) 1 else 0
 
         return when {
             temSinalGrave(texto) || sinais >= 3 -> {
@@ -34,10 +38,14 @@ object LocalRiskAnalyzer {
         }
     }
 
-    fun deveEnviarParaIA(mensagem: String): Boolean {
+    fun deveEnviarParaIA(
+        mensagem: String,
+        dominioForaDoRanking: Boolean = false
+    ): Boolean {
         val texto = mensagem.lowercase()
 
-        val sinais = contarSinaisDeRisco(texto)
+        val sinais = contarSinaisDeRisco(texto) +
+                if (dominioForaDoRanking) 1 else 0
 
         return sinais >= 1 || temSinalGrave(texto)
     }
@@ -63,7 +71,8 @@ object LocalRiskAnalyzer {
                 texto.contains("suspenso") ||
                 texto.contains("suspensa")
 
-        val temLink = texto.contains("http") ||
+        val temLink = texto.contains("[link]") ||
+                texto.contains("http") ||
                 texto.contains("www.") ||
                 texto.contains(".com") ||
                 texto.contains(".net") ||
@@ -74,10 +83,21 @@ object LocalRiskAnalyzer {
 
         val pedeDados = texto.contains("confirme seus dados") ||
                 texto.contains("dados pessoais") ||
-                texto.contains("cpf") ||
-                texto.contains("rg") ||
-                texto.contains("cartão") ||
-                texto.contains("cartao")
+                texto.contains("envie seu cpf") ||
+                texto.contains("mande seu cpf") ||
+                texto.contains("informe seu cpf") ||
+                texto.contains("digite seu cpf") ||
+                texto.contains("envie seu rg") ||
+                texto.contains("mande seu rg") ||
+                texto.contains("informe seu rg") ||
+                texto.contains("envie seu cartão") ||
+                texto.contains("mande seu cartão") ||
+                texto.contains("informe seu cartão") ||
+                texto.contains("digite seu cartão") ||
+                texto.contains("envie seu cartao") ||
+                texto.contains("mande seu cartao") ||
+                texto.contains("informe seu cartao") ||
+                texto.contains("digite seu cartao")
 
         val imitaInstituicao = texto.contains("banco") ||
                 texto.contains("gov") ||

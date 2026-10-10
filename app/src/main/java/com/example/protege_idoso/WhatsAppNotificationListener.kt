@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.security.MessageDigest
 
 class WhatsAppNotificationListener : NotificationListenerService() {
 
@@ -17,9 +18,21 @@ class WhatsAppNotificationListener : NotificationListenerService() {
     private val mutexAnalise = Mutex()
     private var analisandoAgora = false
 
+    private fun gerarHash(texto: String): String {
+        val bytes = MessageDigest
+            .getInstance("SHA-256")
+            .digest(texto.toByteArray())
+
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
     override fun onListenerConnected() {
         super.onListenerConnected()
+
+        TrancoChecker.carregarLista(applicationContext)
+
         Log.d("ProtegeIdoso", "Serviço de notificações conectado!")
+        Log.d("ProtegeIdoso", "Lista Tranco carregada para consulta.")
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -53,10 +66,10 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         val mensagemSanitizada = SanitizationService.sanitizeMessage(mensagemFinal)
 
 
-        Log.d("ProtegeIdoso", "Mensagem sanitizada: $mensagemSanitizada")
+        Log.d("ProtegeIdoso", "Mensagem sanitizada e pronta para análise.")
 
         val agora = System.currentTimeMillis()
-        val chaveMensagem = "$remetente|$mensagemFinal"
+        val chaveMensagem = gerarHash("$remetente|$mensagemSanitizada")
 
         if (chaveMensagem == ultimaMensagemAnalisada && agora - ultimoHorarioAnalise < 120_000) {
             Log.d("ProtegeIdoso", "Mensagem repetida ignorada.")
@@ -66,13 +79,35 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         ultimaMensagemAnalisada = chaveMensagem
         ultimoHorarioAnalise = agora
 
+        val urlEncontrada = Regex(
+            """(?i)(?:https?://|www\.)[^\s]+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/[^\s]*)?"""
+        ).find(mensagemFinal)?.value
 
+        val resultadoTranco = urlEncontrada?.let {
+            TrancoChecker.consultarUrl(it)
 
-        val resultadoLocal = LocalRiskAnalyzer.analisarMensagem(mensagemFinal)
+        }
+        Log.d(
+            "ProtegeIdoso",
+            when (resultadoTranco) {
+                true -> "Domínio encontrado no ranking Tranco."
+                false -> "Domínio não encontrado no ranking Tranco."
+                null -> "Não foi possível consultar o domínio no Tranco."
+            }
+        )
+
+        val resultadoLocal = LocalRiskAnalyzer.analisarMensagem(
+            mensagem = mensagemSanitizada,
+            dominioForaDoRanking = resultadoTranco == false
+        )
 
         Log.d("ProtegeIdoso", "Resultado local: ${resultadoLocal.nivel}")
 
-        if (!LocalRiskAnalyzer.deveEnviarParaIA(mensagemFinal)) {
+        if (!LocalRiskAnalyzer.deveEnviarParaIA(
+                mensagem = mensagemSanitizada,
+                dominioForaDoRanking = resultadoTranco == false
+            )
+        ) {
             Log.d("ProtegeIdoso", "Mensagem segura pelo filtro local. IA não será chamada.")
             return
         }
