@@ -133,6 +133,10 @@ class MainActivity : ComponentActivity() {
                     },
                     onPedirAjuda = {
                         abrirDisqueDenuncia(this)
+                    },
+                    onAbrirInstrucoes = {
+                        val intent = Intent(this, InstrucoesActivity::class.java)
+                        startActivity(intent)
                     }
                 )
             }

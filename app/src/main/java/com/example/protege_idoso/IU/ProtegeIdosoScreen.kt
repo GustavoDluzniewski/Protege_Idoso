@@ -1,6 +1,5 @@
 package com.example.protege_idoso.ui
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,11 +42,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.protege_idoso.R
-import com.example.protege_idoso.ui.theme.Protege_IdosoTheme
 import androidx.compose.ui.semantics.stateDescription
+import com.example.protege_idoso.InstrucoesActivity
 
 @Composable
 fun ProtegeIdosoScreen(
@@ -59,7 +57,8 @@ fun ProtegeIdosoScreen(
     onAvisoSuspeitoChange: (Boolean) -> Unit,
     onAvisoGolpeChange: (Boolean) -> Unit,
     onAtivarProtecao: () -> Unit,
-    onPedirAjuda: () -> Unit
+    onPedirAjuda: () -> Unit,
+    onAbrirInstrucoes: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -88,6 +87,10 @@ fun ProtegeIdosoScreen(
                 onClick = onPedirAjuda
             )
 
+            BotaoInstrucoes(
+                onClick = onAbrirInstrucoes
+            )
+
             Text(
                 text = "Quando devo avisar você?",
                 style = MaterialTheme.typography.titleLarge,
@@ -108,6 +111,31 @@ fun ProtegeIdosoScreen(
 
             NotaDePrivacidade()
         }
+    }
+}
+
+@Composable
+private fun BotaoInstrucoes(
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.primary
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(
+            text = "Instruções de Segurança",
+            style = MaterialTheme.typography.labelLarge
+        )
     }
 }
 
@@ -203,9 +231,9 @@ private fun CartaoDeStatus(
                 Text(
                     text =
                         if (protecaoAtiva)
-                            "Proteção ligada"
+                            "Proteção ativada"
                         else
-                            "Proteção desligada",
+                            "Proteção desativada",
                     style = MaterialTheme.typography.titleLarge
                 )
             }
