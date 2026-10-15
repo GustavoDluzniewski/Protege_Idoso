@@ -83,18 +83,21 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             """(?i)(?:https?://|www\.)[^\s]+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/[^\s]*)?"""
         ).find(mensagemFinal)?.value
 
-        val resultadoTranco = urlEncontrada?.let {
-            TrancoChecker.consultarUrl(it)
-
+        val resultadoTranco = urlEncontrada?.let { url ->
+            TrancoChecker.consultarUrl(url)
         }
-        Log.d(
-            "ProtegeIdoso",
-            when (resultadoTranco) {
-                true -> "Domínio encontrado no ranking Tranco."
-                false -> "Domínio não encontrado no ranking Tranco."
-                null -> "Não foi possível consultar o domínio no Tranco."
-            }
-        )
+
+        if (urlEncontrada != null) {
+            Log.d(
+                "ProtegeIdoso",
+                when (resultadoTranco) {
+                    true -> "Domínio encontrado no ranking Tranco."
+                    false -> "Domínio não encontrado no ranking Tranco."
+                    null -> "Não foi possível consultar o domínio no Tranco."
+                }
+            )
+        }
+
 
         val resultadoLocal = LocalRiskAnalyzer.analisarMensagem(
             mensagem = mensagemSanitizada,

@@ -14,8 +14,6 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-val openAiApiKey = localProperties.getProperty("OPENAI_API_KEY") ?: ""
-
 android {
     namespace = "com.example.protege_idoso"
     compileSdk {
@@ -31,15 +29,17 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
+        testInstrumentationRunner =
+            "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {

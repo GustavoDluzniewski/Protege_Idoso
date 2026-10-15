@@ -9,170 +9,129 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.concurrent.TimeUnit
 
 object OpenAIRiskAnalyzer {
 
-    private val API_KEY = BuildConfig.OPENAI_API_KEY
-    private val client = OkHttpClient()
+    private const val TAG = "ProtegeIdoso"
+
+    // URL pública do backend FastAPI, não do LiteLLM.
+    private const val URL_SERVIDOR =
+        "https://understand-attached-garmin-spouse.trycloudflare.com/analisar"
+
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(70, TimeUnit.SECONDS)
+        .build()
+
     private val gson = Gson()
+
+    private data class RespostaServidor(
+        val classificacao: String?,
+        val explicacao: String?,
+        val orientacao: String?
+    )
 
     suspend fun analisarMensagem(mensagem: String): RiskResult {
         return withContext(Dispatchers.IO) {
             try {
-                val prompt = criarPrompt(mensagem)
+                Log.d(TAG, "Iniciando análise pelo backend")
 
-                Log.d("ProtegeIdoso", "Preparando análise com OpenAI...")
+                val resultado = enviarParaBackend(mensagem)
 
-                val respostaTexto = enviarParaOpenAI(prompt)
-
-
-                converterRespostaParaRiskResult(respostaTexto)
+                converterRespostaParaRiskResult(resultado)
 
             } catch (e: Exception) {
-                Log.e("ProtegeIdoso", "Erro ao analisar com OpenAI", e)
-
-                Log.d("ProtegeIdoso", "Usando análise local como fallback...")
+                Log.e(
+                    TAG,
+                    "Falha na análise remota (${e.javaClass.simpleName}). " +
+                            "Usando análise local."
+                )
 
                 LocalRiskAnalyzer.analisarMensagem(mensagem)
             }
         }
     }
 
-    private fun criarPrompt(mensagem: String): String {
-        return """
-            Classifique esta mensagem de WhatsApp quanto ao risco de golpe contra idosos.
+    private fun enviarParaBackend(mensagem: String): String {
+        val jsonBody = gson.toJson(
+            mapOf("mensagem" to mensagem)
+        )
 
-            Responda somente em JSON válido.
-            Não use markdown.
-            Não escreva nada antes ou depois do JSON.
-
-            Use somente uma destas classificações:
-            SEGURO
-            SUSPEITO
-            POSSIVEL_GOLPE
-
-            Critérios:
-
-            SEGURO:
-            Conversa comum, sem link suspeito, sem urgência e sem pedido de dados pessoais.
-
-            SUSPEITO:
-            Mensagem com link externo, pedido de dados, urgência moderada, remetente desconhecido ou linguagem estranha.
-
-            POSSIVEL_GOLPE:
-            Mensagem com pedido de PIX, senha, código, prêmio, ameaça, imitação de banco, governo, loja ou familiar, link encurtado ou múltiplos sinais de fraude.
-
-            Responda exatamente neste formato:
-
-            {
-              "classificacao": "SEGURO",
-              "explicacao": "explicação curta e simples para um idoso",
-              "orientacao": "orientação simples sobre o que fazer"
-            }
-
-            Mensagem recebida:
-            "$mensagem"
-        """.trimIndent()
-    }
-
-    private fun enviarParaOpenAI(prompt: String): String {
-        val url = "https://api.openai.com/v1/responses"
-
-        val jsonBody = """
-            {
-              "model": "gpt-4.1-nano",
-              "input": ${gson.toJson(prompt)},
-              "temperature": 0.2,
-              "store": false
-            }
-        """.trimIndent()
-
-        val mediaType = "application/json".toMediaType()
-        val body = jsonBody.toRequestBody(mediaType)
+        val body = jsonBody.toRequestBody(
+            "application/json; charset=utf-8".toMediaType()
+        )
 
         val request = Request.Builder()
-            .url(url)
-            .addHeader("Authorization", "Bearer $API_KEY")
-            .addHeader("Content-Type", "application/json")
+            .url(URL_SERVIDOR)
+            .header("Content-Type", "application/json")
             .post(body)
             .build()
 
-        Log.d("ProtegeIdoso", "REQUISIÇÃO OPENAI INICIADA")
-
         client.newCall(request).execute().use { response ->
+            Log.d(TAG, "Resposta HTTP do backend: ${response.code}")
 
             val respostaCompleta = response.body?.string()
-                ?: throw Exception("Resposta vazia da OpenAI")
-
-            Log.d("ProtegeIdoso", "REQUISIÇÃO OPENAI FINALIZADA")
-            Log.d("ProtegeIdoso", "Código da resposta OpenAI: ${response.code}")
+                ?: throw Exception("Resposta vazia do backend")
 
             if (!response.isSuccessful) {
-                Log.e("ProtegeIdoso", "Erro completo da OpenAI: $respostaCompleta")
-                throw Exception("Erro na OpenAI: ${response.code} - $respostaCompleta")
+                // Não registrar o corpo da resposta.
+                throw Exception("Erro HTTP ${response.code}")
             }
 
+            // O backend já devolve os campos diretamente,
+            // sem o formato choices usado pelo LiteLLM.
+            val json = JsonParser.parseString(
+                respostaCompleta
+            ).asJsonObject
 
-            val json = JsonParser.parseString(respostaCompleta).asJsonObject
+            val resposta = gson.fromJson(
+                json,
+                RespostaServidor::class.java
+            )
 
-            val usage = json.getAsJsonObject("usage")
+            val classificacao = resposta.classificacao
+                ?: throw Exception("Classificação não encontrada")
 
-            val inputTokens = usage.get("input_tokens").asInt
-            val outputTokens = usage.get("output_tokens").asInt
-            val totalTokens = usage.get("total_tokens").asInt
+            val explicacao = resposta.explicacao
+                ?: throw Exception("Explicação não encontrada")
 
-            Log.d("ProtegeIdoso", "Tokens de entrada: $inputTokens")
-            Log.d("ProtegeIdoso", "Tokens de saída: $outputTokens")
-            Log.d("ProtegeIdoso", "Total de tokens: $totalTokens")
+            val orientacao = resposta.orientacao
+                ?: throw Exception("Orientação não encontrada")
 
-            val output = json.getAsJsonArray("output")
-                ?: throw Exception("Campo 'output' não encontrado na resposta")
-
-            if (output.size() == 0) {
-                throw Exception("Campo 'output' veio vazio")
-            }
-
-            val primeiroOutput = output[0].asJsonObject
-
-            val content = primeiroOutput.getAsJsonArray("content")
-                ?: throw Exception("Campo 'content' não encontrado na resposta")
-
-            if (content.size() == 0) {
-                throw Exception("Campo 'content' veio vazio")
-            }
-
-            val primeiroContent = content[0].asJsonObject
-
-            val texto = primeiroContent.get("text")?.asString
-                ?: throw Exception("Campo 'text' não encontrado na resposta")
-
-            return texto
+            return gson.toJson(
+                mapOf(
+                    "classificacao" to classificacao,
+                    "explicacao" to explicacao,
+                    "orientacao" to orientacao
+                )
+            )
         }
     }
 
-    private fun converterRespostaParaRiskResult(respostaTexto: String): RiskResult {
-        val textoLimpo = respostaTexto
-            .replace("```json", "")
-            .replace("```", "")
-            .trim()
-
-
-        val json = JsonParser.parseString(textoLimpo).asJsonObject
+    private fun converterRespostaParaRiskResult(
+        respostaTexto: String
+    ): RiskResult {
+        val json = JsonParser.parseString(
+            respostaTexto.trim()
+        ).asJsonObject
 
         val classificacao = json.get("classificacao")?.asString
-            ?: throw Exception("Campo 'classificacao' não encontrado")
+            ?: throw Exception("Classificação não encontrada")
 
         val explicacao = json.get("explicacao")?.asString
-            ?: "A mensagem foi analisada, mas a explicação não foi retornada."
+            ?: throw Exception("Explicação não encontrada")
 
         val orientacao = json.get("orientacao")?.asString
-            ?: "Verifique com cuidado antes de responder."
+            ?: throw Exception("Orientação não encontrada")
 
         val nivel = when (classificacao.uppercase()) {
             "SEGURO" -> RiskLevel.SEGURO
             "SUSPEITO" -> RiskLevel.SUSPEITO
-            "POSSIVEL_GOLPE", "POSSÍVEL_GOLPE" -> RiskLevel.POSSIVEL_GOLPE
-            else -> RiskLevel.SUSPEITO
+            "POSSIVEL_GOLPE", "POSSÍVEL_GOLPE" ->
+                RiskLevel.POSSIVEL_GOLPE
+
+            else -> throw Exception("Classificação inválida")
         }
 
         return RiskResult(
