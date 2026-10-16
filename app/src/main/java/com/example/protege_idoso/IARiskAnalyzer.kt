@@ -15,7 +15,7 @@ object OpenAIRiskAnalyzer {
 
     private const val TAG = "ProtegeIdoso"
 
-    // URL pública do backend FastAPI, não do LiteLLM.
+
     private const val URL_SERVIDOR =
         "https://understand-attached-garmin-spouse.trycloudflare.com/analisar"
 
@@ -75,12 +75,11 @@ object OpenAIRiskAnalyzer {
                 ?: throw Exception("Resposta vazia do backend")
 
             if (!response.isSuccessful) {
-                // Não registrar o corpo da resposta.
+
                 throw Exception("Erro HTTP ${response.code}")
             }
 
-            // O backend já devolve os campos diretamente,
-            // sem o formato choices usado pelo LiteLLM.
+
             val json = JsonParser.parseString(
                 respostaCompleta
             ).asJsonObject

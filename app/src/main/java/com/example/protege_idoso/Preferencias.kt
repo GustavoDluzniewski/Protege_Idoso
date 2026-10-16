@@ -32,4 +32,41 @@ class Preferencias(context: Context) {
                 .putBoolean("aviso_golpe", valor)
                 .apply()
         }
+
+
+    var versaoTermosAceita: Int
+        get() = preferencias.getInt("versao_termos_aceita", 0)
+        set(valor) {
+            preferencias.edit()
+                .putInt("versao_termos_aceita", valor)
+                .apply()
+        }
+
+
+    var dataDoAceite: Long
+        get() = preferencias.getLong("data_do_aceite", 0L)
+        set(valor) {
+            preferencias.edit()
+                .putLong("data_do_aceite", valor)
+                .apply()
+        }
+
+
+    fun aceitouTermosAtuais(): Boolean {
+        return versaoTermosAceita >= DadosLegais.VERSAO
+    }
+
+    fun registrarAceite() {
+        preferencias.edit()
+            .putInt("versao_termos_aceita", DadosLegais.VERSAO)
+            .putLong("data_do_aceite", System.currentTimeMillis())
+            .apply()
+    }
+
+
+    fun revogarAceite() {
+        preferencias.edit()
+            .clear()
+            .apply()
+    }
 }

@@ -7,10 +7,18 @@
             android:allowBackup="true"
             android:label="ProtegeIdoso"
             android:theme="@style/Theme.Protege_Idoso"
-            android:usesCleartextTraffic="true">
+            android:usesCleartextTraffic="false">
 
         <activity
                 android:name=".InstrucoesActivity"
+                android:exported="false" />
+
+        <activity
+                android:name=".PrivacidadeActivity"
+                android:exported="false" />
+
+        <activity
+                android:name=".DocumentoLegalActivity"
                 android:exported="false" />
 
         <activity

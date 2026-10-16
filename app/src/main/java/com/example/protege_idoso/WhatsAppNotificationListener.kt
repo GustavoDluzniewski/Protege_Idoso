@@ -46,6 +46,20 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             return
         }
 
+
+        val preferencias = Preferencias(applicationContext)
+
+        if (!PoliticaDeAlerta.deveAnalisar(
+                termosAceitos = preferencias.aceitouTermosAtuais(),
+                analisarWhatsApp = preferencias.analisarWhatsApp,
+                avisoSuspeito = preferencias.avisoSuspeito,
+                avisoGolpe = preferencias.avisoGolpe
+            )
+        ) {
+            Log.d("ProtegeIdoso", "Termos não aceitos ou análise desligada nas opções. Mensagem ignorada.")
+            return
+        }
+
         val extras = sbn.notification.extras
 
         val remetente = extras.getString("android.title") ?: "Remetente desconhecido"
@@ -134,23 +148,37 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                     Log.d("ProtegeIdoso", "Explicação: ${resultadoFinal.explicacao}")
                     Log.d("ProtegeIdoso", "Orientação: ${resultadoFinal.orientacao}")
 
-                    when (resultadoFinal.nivel) {
-                        RiskLevel.SEGURO -> {
-                            Log.d("ProtegeIdoso", "Mensagem segura. Nenhum alerta exibido.")
-                        }
 
-                        RiskLevel.SUSPEITO -> {
-                            AlertHelper.mostrarAlertaSuspeito(
-                                context = applicationContext,
-                                resultado = resultadoFinal
-                            )
-                        }
+                    val avisar = PoliticaDeAlerta.deveAvisar(
+                        nivel = resultadoFinal.nivel,
+                        termosAceitos = preferencias.aceitouTermosAtuais(),
+                        analisarWhatsApp = preferencias.analisarWhatsApp,
+                        avisoSuspeito = preferencias.avisoSuspeito,
+                        avisoGolpe = preferencias.avisoGolpe
+                    )
 
-                        RiskLevel.POSSIVEL_GOLPE -> {
-                            AlertHelper.mostrarAlertaGolpe(
-                                context = applicationContext,
-                                resultado = resultadoFinal
-                            )
+                    if (!avisar) {
+                        Log.d(
+                            "ProtegeIdoso",
+                            "Nenhum alerta exibido (mensagem segura ou aviso desligado nas opções)."
+                        )
+                    } else {
+                        when (resultadoFinal.nivel) {
+                            RiskLevel.SEGURO -> Unit
+
+                            RiskLevel.SUSPEITO -> {
+                                AlertHelper.mostrarAlertaSuspeito(
+                                    context = applicationContext,
+                                    resultado = resultadoFinal
+                                )
+                            }
+
+                            RiskLevel.POSSIVEL_GOLPE -> {
+                                AlertHelper.mostrarAlertaGolpe(
+                                    context = applicationContext,
+                                    resultado = resultadoFinal
+                                )
+                            }
                         }
                     }
 
