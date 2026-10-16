@@ -1,0 +1,17 @@
+/caches/
+/daemon/
+/native/
+/notifications/
+/wrapper/
+/android/
+/jdks/
+.gradle/
+build/
+.idea/
+*.iml
+local.properties
+captures/
+.cxx/
+.externalNativeBuild/
+.DS_Store
+kotlin-profile/
