@@ -5,7 +5,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Build
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.StyleSpan
 import androidx.core.app.NotificationCompat
 
 object AlertHelper {
@@ -23,6 +27,46 @@ object AlertHelper {
     private const val COR_SUSPEITO = 0xFFB26A00
     private const val COR_GOLPE = 0xFFC62828
 
+    private const val TITULO_SUSPEITO = "⚠️ Atenção com esta mensagem"
+    private const val TITULO_GOLPE = "⚠️ Cuidado: possível golpe"
+    private const val ROTULO_MOTIVO = "Por quê:"
+    private const val ROTULO_ORIENTACAO = "O que fazer:"
+
+    private fun textoCompleto(resultado: RiskResult): CharSequence {
+        val texto = SpannableStringBuilder()
+
+        adicionarRotulo(texto, ROTULO_MOTIVO)
+        texto.append(" ").append(resultado.explicacao)
+        texto.append("\n\n")
+        adicionarRotulo(texto, ROTULO_ORIENTACAO)
+        texto.append(" ").append(resultado.orientacao)
+
+        return texto
+    }
+
+    private fun adicionarRotulo(texto: SpannableStringBuilder, rotulo: String) {
+        val inicio = texto.length
+        texto.append(rotulo)
+        texto.setSpan(
+            StyleSpan(Typeface.BOLD),
+            inicio,
+            texto.length,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    }
+
+    private fun versaoPublica(
+        context: Context,
+        canal: String,
+        titulo: String,
+        cor: Long
+    ) = NotificationCompat.Builder(context, canal)
+        .setSmallIcon(R.drawable.ic_stat_shield)
+        .setColor(cor.toInt())
+        .setContentTitle(titulo)
+        .setContentText("Desbloqueie o celular para ver o aviso.")
+        .build()
+
     fun mostrarAlertaSuspeito(context: Context, resultado: RiskResult) {
         criarCanais(context)
 
@@ -38,15 +82,19 @@ object AlertHelper {
         val notificacao = NotificationCompat.Builder(context, CANAL_SUSPEITO)
             .setSmallIcon(R.drawable.ic_stat_shield)
             .setColor(COR_SUSPEITO.toInt())
-            .setContentTitle("Mensagem suspeita")
-            .setContentText("Esta mensagem pode ser suspeita. Verifique antes de responder.")
+
+            .setContentTitle(TITULO_SUSPEITO)
+            .setContentText(resultado.explicacao)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(
-                        "Esta mensagem pode ser suspeita. Verifique antes de responder.\n\n" +
-                                resultado.orientacao
-                    )
+                    .bigText(textoCompleto(resultado))
             )
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(
+                versaoPublica(context, CANAL_SUSPEITO, TITULO_SUSPEITO, COR_SUSPEITO)
+            )
+            .setVibrate(PADRAO_VIBRACAO_SUSPEITO)
+
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
@@ -73,15 +121,17 @@ object AlertHelper {
         val notificacao = NotificationCompat.Builder(context, CANAL_GOLPE)
             .setSmallIcon(R.drawable.ic_stat_shield)
             .setColor(COR_GOLPE.toInt())
-            .setContentTitle("POSSÍVEL GOLPE DETECTADO")
-            .setContentText("Atenção! Esta mensagem pode ser um golpe.")
+            .setContentTitle(TITULO_GOLPE)
+            .setContentText(resultado.explicacao)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(
-                        "Atenção! Esta mensagem pode ser um golpe.\n\n" +
-                                "Motivo: ${resultado.explicacao}\n\n" +
-                                "Orientação: ${resultado.orientacao}"
-                    )
+                    .setBigContentTitle(TITULO_GOLPE)
+                    .bigText(textoCompleto(resultado))
+                    .setSummaryText("Toque para ver como se proteger")
+            )
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(
+                versaoPublica(context, CANAL_GOLPE, TITULO_GOLPE, COR_GOLPE)
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVibrate(PADRAO_VIBRACAO_GOLPE)
