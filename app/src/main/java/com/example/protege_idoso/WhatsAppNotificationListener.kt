@@ -42,10 +42,11 @@ class WhatsAppNotificationListener : NotificationListenerService() {
 
         val nomePacote = sbn.packageName
 
-        if (nomePacote != "com.whatsapp" && nomePacote != "com.whatsapp.w4b") {
+        if (nomePacote != "com.whatsapp" &&
+            nomePacote != "com.whatsapp.w4b"
+        ) {
             return
         }
-
 
         val preferencias = Preferencias(applicationContext)
 
@@ -56,15 +57,23 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                 avisoGolpe = preferencias.avisoGolpe
             )
         ) {
-            Log.d("ProtegeIdoso", "Termos não aceitos ou análise desligada nas opções. Mensagem ignorada.")
+            Log.d(
+                "ProtegeIdoso",
+                "Termos não aceitos ou análise desligada nas opções. Mensagem ignorada."
+            )
             return
         }
 
         val extras = sbn.notification.extras
 
-        val remetente = extras.getString("android.title") ?: "Remetente desconhecido"
-        val texto = extras.getCharSequence("android.text")?.toString() ?: ""
-        val textoGrande = extras.getCharSequence("android.bigText")?.toString() ?: ""
+        val remetente =
+            extras.getString("android.title") ?: "Remetente desconhecido"
+
+        val texto =
+            extras.getCharSequence("android.text")?.toString() ?: ""
+
+        val textoGrande =
+            extras.getCharSequence("android.bigText")?.toString() ?: ""
 
         val mensagemFinal = when {
             texto.isNotBlank() -> texto
@@ -77,25 +86,20 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             return
         }
 
-        val mensagemSanitizada = SanitizationService.sanitizeMessage(mensagemFinal)
+        val urlsEncontradas = Regex(
+            """(?i)\bhttps?://[^\s<>"']+|\bwww\.[^\s<>"']+"""
+        ).findAll(mensagemFinal)
+            .map {
+                it.value.trimEnd(
+                    '.', ',', ';', ':', '!', '?', ')', ']', '}'
+                )
+            }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .take(5)
+            .toList()
 
-
-        Log.d("ProtegeIdoso", "Mensagem sanitizada e pronta para análise.")
-
-        val agora = System.currentTimeMillis()
-        val chaveMensagem = gerarHash("$remetente|$mensagemSanitizada")
-
-        if (chaveMensagem == ultimaMensagemAnalisada && agora - ultimoHorarioAnalise < 120_000) {
-            Log.d("ProtegeIdoso", "Mensagem repetida ignorada.")
-            return
-        }
-
-        ultimaMensagemAnalisada = chaveMensagem
-        ultimoHorarioAnalise = agora
-
-        val urlEncontrada = Regex(
-            """(?i)(?:https?://|www\.)[^\s]+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/[^\s]*)?"""
-        ).find(mensagemFinal)?.value
+        val urlEncontrada = urlsEncontradas.firstOrNull()
 
         val resultadoTranco = urlEncontrada?.let { url ->
             TrancoChecker.consultarUrl(url)
@@ -112,42 +116,96 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             )
         }
 
+        val mensagemSanitizada =
+            SanitizationService.sanitizeMessage(mensagemFinal)
+
+        Log.d(
+            "ProtegeIdoso",
+            "Mensagem sanitizada e pronta para análise."
+        )
+
+        val agora = System.currentTimeMillis()
+        val chaveMensagem =
+            gerarHash("$remetente|$mensagemSanitizada")
+
+        if (
+            chaveMensagem == ultimaMensagemAnalisada &&
+            agora - ultimoHorarioAnalise < 120_000
+        ) {
+            Log.d("ProtegeIdoso", "Mensagem repetida ignorada.")
+            return
+        }
+
+        ultimaMensagemAnalisada = chaveMensagem
+        ultimoHorarioAnalise = agora
 
         val resultadoLocal = LocalRiskAnalyzer.analisarMensagem(
             mensagem = mensagemSanitizada,
             dominioForaDoRanking = resultadoTranco == false
         )
 
-        Log.d("ProtegeIdoso", "Resultado local: ${resultadoLocal.nivel}")
+        Log.d(
+            "ProtegeIdoso",
+            "Resultado local: ${resultadoLocal.nivel}"
+        )
 
         if (!LocalRiskAnalyzer.deveEnviarParaIA(
                 mensagem = mensagemSanitizada,
                 dominioForaDoRanking = resultadoTranco == false
             )
         ) {
-            Log.d("ProtegeIdoso", "Mensagem segura pelo filtro local. IA não será chamada.")
+            Log.d(
+                "ProtegeIdoso",
+                "Mensagem segura pelo filtro local. IA não será chamada."
+            )
             return
+        }
+
+        val urlsParaBackend = urlsEncontradas.map { url ->
+            if (url.startsWith("www.", ignoreCase = true)) {
+                "https://$url"
+            } else {
+                url
+            }
         }
 
         CoroutineScope(Dispatchers.IO).launch {
             mutexAnalise.withLock {
-
                 if (analisandoAgora) {
-                    Log.d("ProtegeIdoso", "Já existe uma análise em andamento. Ignorando nova chamada.")
+                    Log.d(
+                        "ProtegeIdoso",
+                        "Já existe uma análise em andamento. Ignorando nova chamada."
+                    )
                     return@withLock
                 }
 
                 analisandoAgora = true
 
                 try {
-                    Log.d("ProtegeIdoso", "Enviando mensagem para IA...")
+                    Log.d(
+                        "ProtegeIdoso",
+                        "Enviando mensagem sanitizada e URLs para análise."
+                    )
 
-                    val resultadoFinal = OpenAIRiskAnalyzer.analisarMensagem(mensagemSanitizada)
+                    val resultadoFinal =
+                        IARiskAnalyzer.analisarMensagem(
+                            context = applicationContext,
+                            mensagem = mensagemSanitizada,
+                            urls = urlsParaBackend
+                        )
 
-                    Log.d("ProtegeIdoso", "Resultado final: ${resultadoFinal.nivel}")
-                    Log.d("ProtegeIdoso", "Explicação: ${resultadoFinal.explicacao}")
-                    Log.d("ProtegeIdoso", "Orientação: ${resultadoFinal.orientacao}")
-
+                    Log.d(
+                        "ProtegeIdoso",
+                        "Resultado final: ${resultadoFinal.nivel}"
+                    )
+                    Log.d(
+                        "ProtegeIdoso",
+                        "Explicação: ${resultadoFinal.explicacao}"
+                    )
+                    Log.d(
+                        "ProtegeIdoso",
+                        "Orientação: ${resultadoFinal.orientacao}"
+                    )
 
                     val avisar = PoliticaDeAlerta.deveAvisar(
                         nivel = resultadoFinal.nivel,
@@ -181,7 +239,11 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                             }
                         }
                     }
-
+                } catch (e: Exception) {
+                    Log.e(
+                        "ProtegeIdoso",
+                        "Erro durante a análise da notificação: ${e.javaClass.simpleName}"
+                    )
                 } finally {
                     analisandoAgora = false
                 }

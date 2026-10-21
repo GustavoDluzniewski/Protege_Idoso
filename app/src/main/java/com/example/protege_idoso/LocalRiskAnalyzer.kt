@@ -131,14 +131,60 @@ object LocalRiskAnalyzer {
         ).count { it }
     }
 
+
     private fun temSinalGrave(texto: String): Boolean {
-        return texto.contains("senha") ||
-                texto.contains("código") ||
-                texto.contains("codigo") ||
-                texto.contains("pix") ||
-                texto.contains("me ajuda com um pix") ||
-                texto.contains("confirme seus dados") ||
-                texto.contains("troquei de número") ||
-                texto.contains("troquei de numero")
+        val pedeSenha =
+            (texto.contains("senha") || texto.contains("palavra-passe")) &&
+                    listOf(
+                        "informe", "digite", "envie", "compartilhe",
+                        "forneça", "forneca", "passe sua"
+                    ).any { texto.contains(it) }
+
+        val pedeCodigo =
+            (texto.contains("código") || texto.contains("codigo")) &&
+                    listOf(
+                        "informe", "digite", "envie", "compartilhe",
+                        "forneça", "forneca", "me passe"
+                    ).any { texto.contains(it) }
+
+
+        val pedeTransferencia =
+            Regex(
+                """\b(faça|faca|envie|transfira|pague|deposite|mande|manda|realize|efetue)\b"""
+            ).containsMatchIn(texto) &&
+                    Regex(
+                        """\b(pix|transferência|transferencia|depósito|deposito)\b"""
+                    ).containsMatchIn(texto)
+
+
+        val pedeDinheiroComoFamiliar =
+            (texto.contains("troquei de número") ||
+                    texto.contains("troquei de numero") ||
+                    texto.contains("meu celular quebrou") ||
+                    texto.contains("sou seu filho") ||
+                    texto.contains("sou sua filha") ||
+                    texto.contains("sou seu neto") ||
+                    texto.contains("sou sua neta")) &&
+                    listOf(
+                        "dinheiro", "pix", "transferência",
+                        "transferencia", "depósito", "deposito"
+                    ).any { texto.contains(it) }
+
+        val ameacaComBloqueio =
+            (texto.contains("bloqueio") ||
+                    texto.contains("bloqueada") ||
+                    texto.contains("bloqueado")) &&
+                    (texto.contains("senha") ||
+                            texto.contains("código") ||
+                            texto.contains("codigo") ||
+                            texto.contains("pix") ||
+                            texto.contains("clique no link"))
+
+        return pedeSenha ||
+                pedeCodigo ||
+                pedeTransferencia ||
+                pedeDinheiroComoFamiliar ||
+                ameacaComBloqueio
     }
+
 }
