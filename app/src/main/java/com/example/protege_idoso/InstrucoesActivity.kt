@@ -6,48 +6,54 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import com.example.protege_idoso.contatos.AcoesDeContato
+import com.example.protege_idoso.contatos.ContatoConfianca
+import com.example.protege_idoso.contatos.ContatosRepository
+import com.example.protege_idoso.ui.BotaoPrincipal
+import com.example.protege_idoso.ui.CabecalhoDeTela
+import com.example.protege_idoso.ui.CartaoBranco
+import com.example.protege_idoso.ui.DivisorSuave
+import com.example.protege_idoso.ui.TituloDeSecao
+import com.example.protege_idoso.ui.theme.ProtegeTema
 import com.example.protege_idoso.ui.theme.Protege_IdosoTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class InstrucoesActivity : ComponentActivity() {
-
     private fun abrirDisqueDenuncia() {
-
         val numero = "556932168940"
 
         val mensagem = """
@@ -76,16 +82,40 @@ class InstrucoesActivity : ComponentActivity() {
         }
     }
 
+    private var contatos by mutableStateOf<List<ContatoConfianca>>(emptyList())
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         setContent {
             Protege_IdosoTheme {
                 InstrucoesScreen(
+                    contatos = contatos,
+                    onVoltar = { finish() },
+                    onLigar = { AcoesDeContato.ligar(this, it) },
+                    onGerenciarContatos = {
+                        startActivity(
+                            ContatosActivity.criarIntent(this, novoContato = contatos.isEmpty())
+                        )
+                    },
                     onDenunciar = {
                         abrirDisqueDenuncia()
                     }
                 )
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            contatos = try {
+                withContext(Dispatchers.IO) {
+                    ContatosRepository(applicationContext).listar()
+                }
+            } catch (e: Exception) {
+                emptyList()
             }
         }
     }
@@ -112,158 +142,114 @@ private val passosAposGolpe = listOf(
     "Se necessário, procure ajuda pelo botão “Denuncie Aqui!”."
 )
 
+
 @Composable
 fun InstrucoesScreen(
+    contatos: List<ContatoConfianca>,
+    onVoltar: () -> Unit,
+    onLigar: (ContatoConfianca) -> Unit,
+    onGerenciarContatos: () -> Unit,
     onDenunciar: () -> Unit
 ) {
+    val cores = ProtegeTema.cores
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    horizontal = 20.dp,
-                    vertical = 16.dp
-                ),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-
-            CabecalhoInstrucoes()
-
-            Text(
-                text = "O que fazer?",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.semantics {
-                    heading()
-                }
+        Column(modifier = Modifier.fillMaxSize()) {
+            CabecalhoDeTela(
+                titulo = "Instruções de segurança",
+                subtitulo = "Veja o que fazer agora",
+                icone = painterResource(R.drawable.ic_stat_shield),
+                onVoltar = onVoltar
             )
 
-            CartaoDePassos(passos = passosDeSeguranca)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
+                    .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                TituloDeSecao(texto = "O que fazer?")
 
-            Text(
-                text = "Já fez o pagamento ou passou dados:",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.semantics {
-                    heading()
-                }
-            )
+                CartaoDePassos(
+                    passos = passosDeSeguranca,
+                    corNumero = MaterialTheme.colorScheme.primary,
+                    fundoNumero = MaterialTheme.colorScheme.primaryContainer
+                )
 
-            CartaoDePassos(passos = passosAposGolpe)
+                CartaoPecaAjuda(
+                    contatos = contatos,
+                    onLigar = onLigar,
+                    onGerenciar = onGerenciarContatos,
+                    titulo = "Ligue para quem você confia"
+                )
 
-            BotaoDenunciar(
-                onClick = onDenunciar
-            )
-        }
-    }
-}
+                TituloDeSecao(texto = "Já fez o pagamento ou passou dados:")
 
-@Composable
-private fun CabecalhoInstrucoes() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+                CartaoDePassos(
+                    passos = passosAposGolpe,
+                    corNumero = cores.perigoTexto,
+                    fundoNumero = cores.perigoFundo
+                )
 
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = androidx.compose.ui.res.painterResource(R.drawable.ic_stat_shield),
-                contentDescription = "ProtegeIdoso",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(36.dp)
-            )
-        }
-
-        Column {
-
-            Text(
-                text = "ProtegeIdoso",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.semantics {
-                    heading()
-                }
-            )
-
-            Text(
-                text = "Veja o que fazer agora",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-
-@Composable
-private fun CartaoDePassos(
-    passos: List<String>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline
-        )
-    ) {
-
-        Column {
-
-            passos.forEachIndexed { indice, passo ->
-
-                if (indice > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-
-                LinhaDePasso(texto = passo)
+                BotaoDenunciar(
+                    onClick = onDenunciar
+                )
             }
         }
     }
 }
 
 @Composable
-private fun LinhaDePasso(
-    texto: String
+private fun CartaoDePassos(
+    passos: List<String>,
+    corNumero: Color,
+    fundoNumero: Color
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .padding(
-                horizontal = 20.dp,
-                vertical = 16.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    CartaoBranco {
+        passos.forEachIndexed { indice, passo ->
 
-        Spacer(
-            modifier = Modifier.width(16.dp)
-        )
+            if (indice > 0) {
+                DivisorSuave()
+            }
 
-        Text(
-            text = texto,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 72.dp)
+                    .padding(
+                        horizontal = 18.dp,
+                        vertical = 16.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(fundoNumero),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = (indice + 1).toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = corNumero
+                    )
+                }
+
+                Text(
+                    text = passo,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
     }
 }
 
@@ -271,42 +257,26 @@ private fun LinhaDePasso(
 private fun BotaoDenunciar(
     onClick: () -> Unit
 ) {
+    val cores = ProtegeTema.cores
+
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
-        Button(
+        BotaoPrincipal(
+            texto = "Denuncie Aqui!",
             onClick = onClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError
-            )
-        ) {
-
-            Icon(
-                imageVector = Icons.Filled.Phone,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp)
-            )
-
-            Spacer(
-                modifier = Modifier.width(12.dp)
-            )
-
-            Text(
-                text = "Denuncie Aqui!",
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
+            icone = Icons.Filled.Phone,
+            corFundo = cores.botaoPerigo,
+            corTexto = cores.sobreBotaoPerigo,
+            alturaMinima = 68.dp
+        )
 
         Text(
-            text = "Abre o WhatsApp para pedir orientação ou fazer uma denúncia!.",
+            text = "Abre o WhatsApp para pedir orientação ou fazer uma denúncia.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

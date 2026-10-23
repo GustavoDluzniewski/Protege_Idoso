@@ -7,41 +7,30 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,12 +39,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
+import com.example.protege_idoso.ui.BotaoSecundario
+import com.example.protege_idoso.ui.CabecalhoDeTela
+import com.example.protege_idoso.ui.CartaoBranco
+import com.example.protege_idoso.ui.CartaoColorido
+import com.example.protege_idoso.ui.DialogoConfirmacao
+import com.example.protege_idoso.ui.DivisorSuave
+import com.example.protege_idoso.ui.TituloDeSecao
+import com.example.protege_idoso.ui.theme.ProtegeTema
 import com.example.protege_idoso.ui.theme.Protege_IdosoTheme
 
 class PrivacidadeActivity : ComponentActivity() {
@@ -64,6 +60,7 @@ class PrivacidadeActivity : ComponentActivity() {
     private var avisosPermitidos by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         atualizarEstados()
@@ -136,6 +133,20 @@ class PrivacidadeActivity : ComponentActivity() {
     private fun revogarConsentimento() {
         Preferencias(this).revogarAceite()
 
+        try {
+            com.example.protege_idoso.historico.HistoricoRepository(applicationContext)
+                .limparTudo()
+            com.example.protege_idoso.contatos.ContatosRepository(applicationContext)
+                .limparTudo()
+            com.example.protege_idoso.quiz.QuizRepository(applicationContext)
+                .apagarTudo()
+        } catch (e: Exception) {
+            android.util.Log.e(
+                "ProtegeIdoso",
+                "Não foi possível apagar os dados locais: ${e.javaClass.simpleName}"
+            )
+        }
+
         Toast.makeText(
             this,
             "Consentimento revogado.",
@@ -173,94 +184,48 @@ fun PrivacidadeScreen(
     var confirmarRevogacao by remember { mutableStateOf(false) }
 
     if (confirmarRevogacao) {
-        AlertDialog(
-            onDismissRequest = { confirmarRevogacao = false },
-            title = {
-                Text(text = "Revogar consentimento?")
+        DialogoConfirmacao(
+            titulo = "Revogar consentimento?",
+            texto = "O ProtegeIdoso vai parar de analisar as suas mensagens e " +
+                    "apagar, neste celular, o registro do seu aceite, as suas " +
+                    "escolhas, o histórico de alertas, os contatos de confiança " +
+                    "e o placar do desafio do dia. " +
+                    "Para usar de novo, será preciso aceitar os Termos " +
+                    "de Uso e a Política de Privacidade outra vez.\n\n" +
+                    "Para também retirar a permissão de acesso às notificações, " +
+                    "use as configurações do celular.",
+            rotuloConfirmar = "Revogar",
+            onConfirmar = {
+                confirmarRevogacao = false
+                onRevogarConsentimento()
             },
-            text = {
-                Text(
-                    text = "O ProtegeIdoso vai parar de analisar as suas mensagens e " +
-                            "apagar, neste celular, o registro do seu aceite e as suas " +
-                            "escolhas. Para usar de novo, será preciso aceitar os Termos " +
-                            "de Uso e a Política de Privacidade outra vez.\n\n" +
-                            "Para também retirar a permissão de acesso às notificações, " +
-                            "use as configurações do celular.",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmarRevogacao = false
-                        onRevogarConsentimento()
-                    },
-                    modifier = Modifier.heightIn(min = 48.dp)
-                ) {
-                    Text(
-                        text = "Revogar",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { confirmarRevogacao = false },
-                    modifier = Modifier.heightIn(min = 48.dp)
-                ) {
-                    Text(text = "Cancelar")
-                }
-            }
+            onCancelar = { confirmarRevogacao = false }
         )
     }
+
+    val iconeCadeado = rememberVectorPainter(Icons.Filled.Lock)
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                FilledTonalButton(
-                    onClick = onVoltar,
-                    modifier = Modifier.heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = "Voltar",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-            }
+            CabecalhoDeTela(
+                titulo = "Privacidade e segurança",
+                subtitulo = "Veja como cuidamos dos seus dados",
+                icone = iconeCadeado,
+                onVoltar = onVoltar
+            )
 
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(
-                        horizontal = 20.dp,
-                        vertical = 8.dp
-                    ),
+                    .navigationBarsPadding()
+                    .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-
-                CabecalhoPrivacidade()
 
                 CartaoResumo()
 
@@ -302,86 +267,23 @@ fun PrivacidadeScreen(
 }
 
 @Composable
-private fun CabecalhoPrivacidade() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_stat_shield),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(36.dp)
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-
-            Text(
-                text = "Privacidade e segurança",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.semantics {
-                    heading()
-                }
-            )
-
-            Text(
-                text = "Veja como cuidamos dos seus dados",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun TituloDeSecao(texto: String) {
-    Text(
-        text = texto,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.semantics {
-            heading()
-        }
-    )
-}
-
-@Composable
 private fun CartaoResumo() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+    CartaoColorido(
+        fundo = MaterialTheme.colorScheme.primaryContainer,
+        texto = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Text(
+            text = "Suas conversas continuam suas",
+            style = MaterialTheme.typography.titleLarge
+        )
 
-            Text(
-                text = "Suas conversas continuam suas",
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            Text(
-                text = "O ProtegeIdoso só observa os avisos de mensagens do WhatsApp " +
-                        "para procurar sinais de golpe. Ele não responde, não envia " +
-                        "mensagens e não guarda o que você recebe.",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
+        Text(
+            text = "O ProtegeIdoso só observa os avisos de mensagens do WhatsApp " +
+                    "para procurar sinais de golpe. Ele não responde, não envia " +
+                    "mensagens e não guarda o texto do que você recebe. No histórico " +
+                    "fica só o resultado dos avisos.",
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 
@@ -392,7 +294,7 @@ private fun CartaoDePermissoes(
     onAbrirAcessoNotificacoes: () -> Unit,
     onAbrirAvisos: () -> Unit
 ) {
-    CartaoBase {
+    CartaoBranco {
 
         LinhaDePermissao(
             titulo = "Acesso às notificações",
@@ -406,7 +308,7 @@ private fun CartaoDePermissoes(
             onClick = onAbrirAcessoNotificacoes
         )
 
-        Divisor()
+        DivisorSuave()
 
         LinhaDePermissao(
             titulo = "Mostrar avisos",
@@ -420,7 +322,7 @@ private fun CartaoDePermissoes(
             onClick = onAbrirAvisos
         )
 
-        Divisor()
+        DivisorSuave()
 
         LinhaDePermissao(
             titulo = "Internet",
@@ -435,7 +337,7 @@ private fun CartaoDePermissoes(
             onClick = {}
         )
 
-        Divisor()
+        DivisorSuave()
 
         Column(
             modifier = Modifier.padding(
@@ -456,6 +358,13 @@ private fun CartaoDePermissoes(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Text(
+                text = "Os contatos de confiança são digitados por você e ficam só " +
+                        "neste celular. O aplicativo não lê a sua agenda.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -471,6 +380,8 @@ private fun LinhaDePermissao(
     textoBotaoInativo: String,
     onClick: () -> Unit
 ) {
+    val cores = ProtegeTema.cores
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -495,7 +406,6 @@ private fun LinhaDePermissao(
 
         if (ativo != null) {
 
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -503,37 +413,21 @@ private fun LinhaDePermissao(
                 Icon(
                     imageVector = if (ativo) Icons.Filled.CheckCircle else Icons.Filled.Warning,
                     contentDescription = null,
-                    tint = if (ativo) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    },
+                    tint = if (ativo) cores.seguroTexto else MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp)
                 )
 
                 Text(
                     text = if (ativo) textoAtivo else textoInativo,
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (ativo) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    }
+                    color = if (ativo) cores.seguroTexto else MaterialTheme.colorScheme.error
                 )
             }
 
-            OutlinedButton(
-                onClick = onClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = if (ativo) textoBotaoAtivo else textoBotaoInativo,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            BotaoSecundario(
+                texto = if (ativo) textoBotaoAtivo else textoBotaoInativo,
+                onClick = onClick
+            )
         }
     }
 }
@@ -548,11 +442,11 @@ private fun CartaoDePassosDaMensagem() {
         "Você recebe o aviso, de acordo com as opções da tela inicial em “Quando devo avisar você?”."
     )
 
-    CartaoBase {
+    CartaoBranco {
         passos.forEachIndexed { indice, passo ->
 
             if (indice > 0) {
-                Divisor()
+                DivisorSuave()
             }
 
             Row(
@@ -568,7 +462,7 @@ private fun CartaoDePassosDaMensagem() {
 
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
@@ -576,7 +470,7 @@ private fun CartaoDePassosDaMensagem() {
                     Text(
                         text = (indice + 1).toString(),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -598,14 +492,15 @@ private fun CartaoDeGarantias() {
         "Não apaga nem bloqueia suas mensagens.",
         "Ignora na hora as notificações de outros aplicativos.",
         "Não guarda suas mensagens no celular.",
-        "Não envia o nome nem o número de quem escreveu."
+        "Não envia o nome nem o número de quem escreveu.",
+        "Não envia o histórico nem os contatos de confiança para lugar nenhum."
     )
 
-    CartaoBase {
+    CartaoBranco {
         garantias.forEachIndexed { indice, garantia ->
 
             if (indice > 0) {
-                Divisor()
+                DivisorSuave()
             }
 
             ItemComIcone(
@@ -619,16 +514,13 @@ private fun CartaoDeGarantias() {
 
 @Composable
 private fun CartaoDeLimites() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        )
+    val cores = ProtegeTema.cores
+
+    CartaoColorido(
+        fundo = cores.alertaFundo,
+        texto = cores.alertaTexto
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top
         ) {
@@ -668,7 +560,7 @@ private fun CartaoDeLimites() {
 private fun CartaoDeControle(
     onAbrirConfiguracoesDoApp: () -> Unit
 ) {
-    CartaoBase {
+    CartaoBranco {
 
         Column(
             modifier = Modifier
@@ -688,18 +580,10 @@ private fun CartaoDeControle(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            OutlinedButton(
-                onClick = onAbrirConfiguracoesDoApp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "Abrir configurações do aplicativo",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            BotaoSecundario(
+                texto = "Abrir configurações do aplicativo",
+                onClick = onAbrirConfiguracoesDoApp
+            )
         }
     }
 }
@@ -710,7 +594,7 @@ private fun CartaoDeDireitos(
     onLerPolitica: () -> Unit,
     onRevogar: () -> Unit
 ) {
-    CartaoBase {
+    CartaoBranco {
 
         Column(
             modifier = Modifier
@@ -731,31 +615,15 @@ private fun CartaoDeDireitos(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            OutlinedButton(
-                onClick = onLerTermos,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "Ler os Termos de Uso",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            BotaoSecundario(
+                texto = "Ler os Termos de Uso",
+                onClick = onLerTermos
+            )
 
-            OutlinedButton(
-                onClick = onLerPolitica,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "Ler a Política de Privacidade",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+            BotaoSecundario(
+                texto = "Ler a Política de Privacidade",
+                onClick = onLerPolitica
+            )
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
@@ -767,25 +635,11 @@ private fun CartaoDeDireitos(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            OutlinedButton(
+            BotaoSecundario(
+                texto = DadosLegais.ROTULO_REVOGAR,
                 onClick = onRevogar,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                ),
-                border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text(
-                    text = DadosLegais.ROTULO_REVOGAR,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+                cor = MaterialTheme.colorScheme.error
+            )
         }
     }
 }
@@ -794,7 +648,7 @@ private fun CartaoDeDireitos(
 private fun ItemComIcone(
     icone: ImageVector,
     texto: String,
-    corDoIcone: androidx.compose.ui.graphics.Color
+    corDoIcone: Color
 ) {
     Row(
         modifier = Modifier
@@ -821,33 +675,4 @@ private fun ItemComIcone(
             modifier = Modifier.weight(1f)
         )
     }
-}
-
-@Composable
-private fun CartaoBase(
-    conteudo: @Composable () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline
-        )
-    ) {
-        Column {
-            conteudo()
-        }
-    }
-}
-
-@Composable
-private fun Divisor() {
-    HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 20.dp),
-        color = MaterialTheme.colorScheme.outline
-    )
 }

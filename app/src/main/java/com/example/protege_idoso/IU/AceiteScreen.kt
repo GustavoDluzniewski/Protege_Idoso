@@ -3,32 +3,29 @@ package com.example.protege_idoso.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,13 +35,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.protege_idoso.R
+import com.example.protege_idoso.ui.theme.ProtegeTema
 
 
 @Composable
@@ -63,113 +59,89 @@ fun AceiteScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
 
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(
-                        horizontal = 20.dp,
-                        vertical = 16.dp
-                    ),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
                 CabecalhoAceite()
 
-                Text(
-                    text = "Antes de começar, veja como o aplicativo cuida dos seus dados:",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Column(
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
 
-                CartaoDeResumoDoAceite()
+                    Text(
+                        text = "Antes de começar, veja como o aplicativo cuida dos seus dados:",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
 
-                BotaoDeLeitura(
-                    texto = "Ler os Termos de Uso",
-                    onClick = onLerTermos
-                )
+                    CartaoDeResumoDoAceite()
 
-                BotaoDeLeitura(
-                    texto = "Ler a Política de Privacidade",
-                    onClick = onLerPolitica
-                )
+                    BotaoSecundario(
+                        texto = "Ler os Termos de Uso",
+                        onClick = onLerTermos
+                    )
 
-                Text(
-                    text = "Para continuar, marque as duas opções:",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.semantics {
-                        heading()
-                    }
-                )
+                    BotaoSecundario(
+                        texto = "Ler a Política de Privacidade",
+                        onClick = onLerPolitica
+                    )
 
-                CaixaDeAceite(
-                    marcado = aceitouTermos,
-                    texto = "Li e concordo com os Termos de Uso.",
-                    onMudar = { aceitouTermos = it }
-                )
+                    TituloDeSecao(texto = "Para continuar, marque as duas opções:")
 
-                CaixaDeAceite(
-                    marcado = aceitouPrivacidade,
-                    texto = "Li a Política de Privacidade e autorizo o tratamento dos meus " +
-                            "dados como descrito nela, inclusive o envio, para análise, do " +
-                            "texto protegido das mensagens que tiverem sinais de risco. " +
-                            "Esse texto pode ser tratado em outros países.",
-                    onMudar = { aceitouPrivacidade = it }
-                )
+                    CaixaDeAceite(
+                        marcado = aceitouTermos,
+                        texto = "Li e concordo com os Termos de Uso.",
+                        onMudar = { aceitouTermos = it }
+                    )
+
+                    CaixaDeAceite(
+                        marcado = aceitouPrivacidade,
+                        texto = "Li a Política de Privacidade e autorizo o tratamento dos meus " +
+                                "dados como descrito nela, inclusive o envio, para análise, do " +
+                                "texto protegido das mensagens que tiverem sinais de risco. " +
+                                "Esse texto pode ser tratado em outros países.",
+                        onMudar = { aceitouPrivacidade = it }
+                    )
+                }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 20.dp,
-                        vertical = 12.dp
-                    ),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 12.dp
             ) {
-
-                if (!podeContinuar) {
-                    Text(
-                        text = "Marque as duas opções acima para continuar.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Button(
-                    onClick = onAceitar,
-                    enabled = podeContinuar,
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 64.dp),
-                    shape = RoundedCornerShape(16.dp)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "Aceitar e continuar",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
 
-                OutlinedButton(
-                    onClick = onRecusar,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text(
-                        text = "Não aceito (sair)",
-                        style = MaterialTheme.typography.labelLarge
+                    if (!podeContinuar) {
+                        Text(
+                            text = "Marque as duas opções acima para continuar.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    BotaoPrincipal(
+                        texto = "Aceitar e continuar",
+                        onClick = onAceitar,
+                        habilitado = podeContinuar
+                    )
+
+                    BotaoSecundario(
+                        texto = "Não aceito (sair)",
+                        onClick = onRecusar
                     )
                 }
             }
@@ -179,32 +151,30 @@ fun AceiteScreen(
 
 @Composable
 private fun CabecalhoAceite() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    val cores = ProtegeTema.cores
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(gradienteDoCabecalho())
     ) {
-
-        Box(
+        Column(
             modifier = Modifier
-                .size(60.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_stat_shield),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(36.dp)
-            )
-        }
+            EscudoDeProtecao(ativo = true, tamanho = 170.dp)
 
-        Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "Bem-vindo ao ProtegeIdoso",
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = cores.sobreGradiente,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.semantics {
                     heading()
                 }
@@ -212,10 +182,13 @@ private fun CabecalhoAceite() {
 
             Text(
                 text = "Termos de Uso e Privacidade",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.bodyLarge,
+                color = cores.sobreGradiente,
+                textAlign = TextAlign.Center
             )
         }
+
+        OndaInferior()
     }
 }
 
@@ -229,14 +202,7 @@ private fun CartaoDeResumoDoAceite() {
         "Você pode revogar o consentimento quando quiser, na tela “Privacidade e segurança”."
     )
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    ) {
+    CartaoBranco {
         Column(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -249,36 +215,19 @@ private fun CartaoDeResumoDoAceite() {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(26.dp)
                     )
 
                     Text(
                         text = ponto,
                         style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun BotaoDeLeitura(
-    texto: String,
-    onClick: () -> Unit
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Text(
-            text = texto,
-            style = MaterialTheme.typography.labelLarge
-        )
     }
 }
 
@@ -292,10 +241,14 @@ private fun CaixaDeAceite(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (marcado) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
         ),
         border = BorderStroke(
-            1.dp,
+            if (marcado) 2.dp else 1.dp,
             if (marcado) {
                 MaterialTheme.colorScheme.primary
             } else {

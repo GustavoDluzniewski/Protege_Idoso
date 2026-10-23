@@ -3,7 +3,6 @@ package com.example.protege_idoso
 import android.content.Context
 
 object TrancoChecker {
-
     private val dominios = mutableSetOf<String>()
 
     private var carregado = false

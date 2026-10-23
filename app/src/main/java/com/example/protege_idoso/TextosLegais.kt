@@ -5,7 +5,7 @@ object DadosLegais {
 
     const val VERSAO = 1
 
-    const val DATA_ATUALIZACAO = "16 de outubro de 2026"
+    const val DATA_ATUALIZACAO = "21 de outubro de 2026"
 
 
     const val ROTULO_REVOGAR = "Revogar meu consentimento"
@@ -42,7 +42,8 @@ object TextosLegais {
             "2. O que o ProtegeIdoso faz",
             listOf(
                 "O ProtegeIdoso ajuda a identificar mensagens do WhatsApp que possam ser golpes. Ele lê o aviso (notificação) de cada mensagem recebida, procura sinais de risco e, quando necessário, mostra um aviso no seu celular.",
-                "O aplicativo não responde, não apaga, não bloqueia e não envia mensagens por você, e não altera nada no WhatsApp."
+                "O aplicativo não responde, não apaga, não bloqueia e não envia mensagens por você, e não altera nada no WhatsApp.",
+                "Ele também guarda, só no seu celular, um histórico dos avisos mostrados e uma lista de contatos de confiança que você mesmo cadastra, para ligar ou mandar mensagem quando tiver dúvida."
             )
         ),
 
@@ -141,8 +142,10 @@ object TextosLegais {
                 "• Texto da mensagem que tiver sinais de risco, depois de esconder e-mails, telefones, CPF, links e chaves Pix (trocados por marcações como [CPF] ou [LINK]).",
                 "• Suas escolhas no aplicativo: se a análise e cada tipo de aviso estão ligados.",
                 "• Registro do seu aceite: qual versão destes documentos você aceitou e quando. Fica somente no seu celular.",
+                "• Histórico de alertas: para cada aviso mostrado, o nível de risco, a explicação, a orientação, a data e a hora. Não inclui o texto da mensagem, o nome nem o número de quem enviou. Fica somente no seu celular.",
+                "• Contatos de confiança: nome, telefone e, se você quiser, o parentesco das pessoas que você cadastrar. Esses dados são digitados por você, ficam somente no seu celular e nunca são enviados ao servidor. Cadastre apenas pessoas que concordem em ajudar você.",
                 "• Dados de conexão: ao enviar o texto para análise, o servidor recebe o endereço de rede (IP) do seu aparelho, como acontece em qualquer conexão com a internet.",
-                "Não coletamos seu nome, telefone, e-mail, localização, contatos, fotos, arquivos, áudio, câmera nem identificadores de publicidade.",
+                "Não coletamos seu nome, telefone, e-mail, localização, fotos, arquivos, áudio, câmera nem identificadores de publicidade, e não lemos a agenda de contatos do celular.",
                 "As mensagens podem conter, por acaso, dados pessoais sensíveis (como informações de saúde) ou dados de quem escreveu para você. O aplicativo não procura esses dados, não os usa para outra finalidade e trata o texto somente para classificar o risco de golpe. Ao aceitar esta Política, você autoriza esse tratamento."
             )
         ),
@@ -187,7 +190,7 @@ object TextosLegais {
         SecaoLegal(
             "7. Por quanto tempo guardamos",
             listOf(
-                "• No celular: o aplicativo não grava o conteúdo das mensagens. Ele guarda apenas as suas opções e o registro do aceite, até você revogar o consentimento, limpar os dados do aplicativo ou desinstalá-lo.",
+                "• No celular: o aplicativo não grava o conteúdo das mensagens. Ele guarda apenas as suas opções, o registro do aceite, o histórico de alertas (só o nível de risco, a explicação, a orientação e a data e hora do aviso — sem o texto da mensagem, o nome ou o número de quem enviou) e os contatos de confiança que você cadastrar, até você revogar o consentimento, limpar os dados do aplicativo ou desinstalá-lo. Você também pode apagar alertas a qualquer momento na tela “Histórico de alertas” e remover contatos na tela “Contatos de confiança”.",
                 "• No servidor de análise: " + DadosLegais.RETENCAO_NO_SERVIDOR
             )
         ),
@@ -217,6 +220,7 @@ object TextosLegais {
                 "• E-mails, telefones, CPF, links e chaves Pix são escondidos antes do envio.",
                 "• O envio usa conexão segura (HTTPS) e o aplicativo bloqueia conexões sem criptografia.",
                 "• O conteúdo das mensagens não é gravado no celular.",
+                "• O histórico de alertas e os contatos de confiança ficam só no celular e não entram no backup na nuvem.",
                 "• O aplicativo pede só as permissões de que precisa e ignora na hora as notificações de outros aplicativos.",
                 "Nenhum sistema é totalmente seguro. Se ocorrer um incidente que possa causar risco ou dano relevante a você, comunicaremos você e a ANPD, conforme a LGPD (art. 48)."
             )

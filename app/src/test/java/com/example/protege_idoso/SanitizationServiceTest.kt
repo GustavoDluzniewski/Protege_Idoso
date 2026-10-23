@@ -4,7 +4,6 @@ import org.junit.Test
 import org.junit.Assert.assertEquals
 
 class SanitizationServiceTest {
-
     @Test
     fun deveIdentificarSinaisBasicosDeRisco() {
         assertEquals(
@@ -75,7 +74,6 @@ class SanitizationServiceTest {
 
     @Test
     fun deveSanitizarDadosPessoais() {
-
         val mensagem = """
             Olá João!
             Seu CPF é 123.456.789-00.
@@ -326,7 +324,6 @@ class SanitizationServiceTest {
     }
     @Test
     fun deveSanitizarMensagemRealistaDoWhatsApp() {
-
         val texto = """
         Olá, João!
         

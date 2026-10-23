@@ -5,33 +5,28 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.example.protege_idoso.ui.CabecalhoDeTela
+import com.example.protege_idoso.ui.CartaoBranco
 import com.example.protege_idoso.ui.theme.Protege_IdosoTheme
 
 
@@ -49,6 +44,7 @@ class DocumentoLegalActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         val tipo = intent.getStringExtra(EXTRA_TIPO) ?: TIPO_TERMOS
@@ -79,74 +75,32 @@ fun DocumentoLegalScreen(
     secoes: List<SecaoLegal>,
     onVoltar: () -> Unit
 ) {
+    val iconeDocumento = rememberVectorPainter(Icons.Filled.Done)
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                FilledTonalButton(
-                    onClick = onVoltar,
-                    modifier = Modifier.heightIn(min = 56.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = "Voltar",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-            }
+            CabecalhoDeTela(
+                titulo = titulo,
+                subtitulo = "Versão ${DadosLegais.VERSAO} · Atualizado em ${DadosLegais.DATA_ATUALIZACAO}",
+                icone = iconeDocumento,
+                onVoltar = onVoltar
+            )
 
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(
-                        horizontal = 20.dp,
-                        vertical = 8.dp
-                    ),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    .navigationBarsPadding()
+                    .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = titulo,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.semantics {
-                            heading()
-                        }
-                    )
-
-                    Text(
-                        text = "Versão ${DadosLegais.VERSAO} · Atualizado em ${DadosLegais.DATA_ATUALIZACAO}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
                 secoes.forEach { secao ->
                     SecaoDoDocumento(secao)
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
@@ -154,39 +108,44 @@ fun DocumentoLegalScreen(
 
 @Composable
 private fun SecaoDoDocumento(secao: SecaoLegal) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    CartaoBranco {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
 
-        Text(
-            text = secao.titulo,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.semantics {
-                heading()
-            }
-        )
+            Text(
+                text = secao.titulo,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.semantics {
+                    heading()
+                }
+            )
 
-        secao.paragrafos.forEach { paragrafo ->
-            if (paragrafo.startsWith("• ")) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            secao.paragrafos.forEach { paragrafo ->
+                if (paragrafo.startsWith("• ")) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        Text(
+                            text = paragrafo.removePrefix("• "),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                } else {
                     Text(
-                        text = "•",
+                        text = paragrafo,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    Text(
-                        text = paragrafo.removePrefix("• "),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
-                    )
                 }
-            } else {
-                Text(
-                    text = paragrafo,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
             }
         }
     }

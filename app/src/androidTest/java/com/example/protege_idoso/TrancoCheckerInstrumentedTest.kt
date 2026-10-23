@@ -9,8 +9,6 @@ import org.junit.Assert.assertEquals
 
 @RunWith(AndroidJUnit4::class)
 class TrancoCheckerInstrumentedTest {
-
-
     @Test
     fun deveRetornarFalseParaDominioForaDoRanking() {
         val context =
@@ -23,7 +21,6 @@ class TrancoCheckerInstrumentedTest {
             TrancoChecker.consultarUrl("https://dominio-inexistente.invalid/pagina")
         )
     }
-
 
 
     @Test

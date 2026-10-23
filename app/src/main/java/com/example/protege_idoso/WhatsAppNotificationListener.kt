@@ -3,6 +3,8 @@ package com.example.protege_idoso
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import com.example.protege_idoso.historico.AnaliseSalva
+import com.example.protege_idoso.historico.HistoricoRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -11,7 +13,6 @@ import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
 
 class WhatsAppNotificationListener : NotificationListenerService() {
-
     private var ultimaMensagemAnalisada = ""
     private var ultimoHorarioAnalise = 0L
 
@@ -24,6 +25,30 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             .digest(texto.toByteArray())
 
         return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun salvarNoHistorico(resultado: RiskResult, nomePacote: String) {
+        try {
+            HistoricoRepository(applicationContext).salvar(
+                AnaliseSalva(
+                    dataHora = System.currentTimeMillis(),
+                    nivel = resultado.nivel,
+                    explicacao = resultado.explicacao,
+                    orientacao = resultado.orientacao,
+                    origem = if (nomePacote == "com.whatsapp.w4b") {
+                        "WhatsApp Business"
+                    } else {
+                        "WhatsApp"
+                    }
+                )
+            )
+            Log.d("ProtegeIdoso", "Resultado salvo no histórico.")
+        } catch (e: Exception) {
+            Log.e(
+                "ProtegeIdoso",
+                "Não foi possível salvar no histórico: ${e.javaClass.simpleName}"
+            )
+        }
     }
 
     override fun onListenerConnected() {
@@ -221,6 +246,11 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                             "Nenhum alerta exibido (mensagem segura ou aviso desligado nas opções)."
                         )
                     } else {
+                        salvarNoHistorico(
+                            resultado = resultadoFinal,
+                            nomePacote = nomePacote
+                        )
+
                         when (resultadoFinal.nivel) {
                             RiskLevel.SEGURO -> Unit
 

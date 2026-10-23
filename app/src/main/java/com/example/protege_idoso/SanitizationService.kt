@@ -1,9 +1,7 @@
 package com.example.protege_idoso
 
 object SanitizationService {
-
     fun sanitizeMessage(mensagem: String): String {
-
         var texto = mensagem
 
         texto = sanitizarEmails(texto)
@@ -79,7 +77,6 @@ object SanitizationService {
         return texto.replace(regex, "[LINK]")
     }
     private fun sanitizarChavesPix(texto: String): String {
-
         val regexEvp = Regex(
             "(?i)[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
         )

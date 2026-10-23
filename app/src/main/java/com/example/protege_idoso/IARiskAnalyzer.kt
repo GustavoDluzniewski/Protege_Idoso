@@ -14,7 +14,6 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 object IARiskAnalyzer {
-
     private const val TAG = "ProtegeIdoso"
 
     private const val URL_BASE =

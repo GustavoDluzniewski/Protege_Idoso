@@ -1,21 +1,23 @@
 package com.example.protege_idoso.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -23,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Home
@@ -30,14 +33,12 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -64,11 +66,15 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.protege_idoso.CartaoDesafioDoDia
 import com.example.protege_idoso.R
+import com.example.protege_idoso.ui.theme.ProtegeTema
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
@@ -86,6 +92,10 @@ fun ProtegeIdosoScreen(
     avisoSuspeito: Boolean,
     avisoGolpe: Boolean,
     versao: String,
+    alertasPendentes: Int,
+    totalContatos: Int,
+    desafioLiberadoEm: Long,
+    desafioEmAndamento: Boolean,
     onAnalisarWhatsAppChange: (Boolean) -> Unit,
     onAvisoSuspeitoChange: (Boolean) -> Unit,
     onAvisoGolpeChange: (Boolean) -> Unit,
@@ -93,6 +103,10 @@ fun ProtegeIdosoScreen(
     onPermitirAvisos: () -> Unit,
     onPedirAjuda: () -> Unit,
     onAbrirInstrucoes: () -> Unit,
+    onAbrirHistorico: () -> Unit,
+    onAbrirDesafio: () -> Unit,
+    onAbrirContatos: () -> Unit,
+    onCadastrarContato: () -> Unit,
     onAbrirPrivacidade: () -> Unit,
     onAbrirTermos: () -> Unit,
     onAbrirPolitica: () -> Unit
@@ -103,6 +117,9 @@ fun ProtegeIdosoScreen(
     val ancoras = remember { Ancoras() }
     val margemPx = with(LocalDensity.current) { 16.dp.toPx() }
 
+    val irParaOpcoes: () -> Unit = {
+        scope.launch { rolarParaOpcoes(ancoras, scrollState, margemPx) }
+    }
 
     BackHandler(enabled = drawerState.isOpen) {
         scope.launch { drawerState.close() }
@@ -129,6 +146,18 @@ fun ProtegeIdosoScreen(
                         drawerState.close()
                         rolarParaOpcoes(ancoras, scrollState, margemPx)
                     }
+                },
+                onHistorico = {
+                    scope.launch { drawerState.close() }
+                    onAbrirHistorico()
+                },
+                onDesafio = {
+                    scope.launch { drawerState.close() }
+                    onAbrirDesafio()
+                },
+                onContatos = {
+                    scope.launch { drawerState.close() }
+                    onAbrirContatos()
                 },
                 onInstrucoes = {
                     scope.launch { drawerState.close() }
@@ -160,57 +189,55 @@ fun ProtegeIdosoScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .systemBarsPadding()
+                    .onGloballyPositioned { ancoras.viewport = it }
+                    .verticalScroll(scrollState)
+                    .navigationBarsPadding()
             ) {
-
-                BarraSuperior(
-                    onAbrirMenu = {
-                        scope.launch { drawerState.open() }
-                    }
+                CabecalhoInicio(
+                    protecaoAtiva = protecaoAtiva,
+                    onAbrirMenu = { scope.launch { drawerState.open() } },
+                    onAtivarProtecao = onAtivarProtecao
                 )
 
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .onGloballyPositioned { ancoras.viewport = it }
-                        .verticalScroll(scrollState)
-                        .padding(
-                            horizontal = 20.dp,
-                            vertical = 16.dp
-                        ),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-
-                    Cabecalho()
-
-                    CartaoDeStatus(
-                        protecaoAtiva = protecaoAtiva,
-                        onAtivarProtecao = onAtivarProtecao
-                    )
-
                     if (!notificacoesPermitidas) {
-                        CartaoAvisosBloqueados(
-                            onPermitirAvisos = onPermitirAvisos
-                        )
+                        CartaoAvisosBloqueados(onPermitirAvisos = onPermitirAvisos)
                     }
 
-                    BotaoPrecisoDeAjuda(
-                        onClick = onPedirAjuda
+                    BotaoPrecisoDeAjuda(onClick = onPedirAjuda)
+
+                    CartaoDesafioDoDia(
+                        liberadoEm = desafioLiberadoEm,
+                        emAndamento = desafioEmAndamento,
+                        onClick = onAbrirDesafio
                     )
 
-                    BotaoInstrucoes(
-                        onClick = onAbrirInstrucoes
+                    PainelDeAtalhos(
+                        protecaoAtiva = protecaoAtiva,
+                        alertasPendentes = alertasPendentes,
+                        onHistorico = onAbrirHistorico,
+                        onContatos = onAbrirContatos,
+                        onInstrucoes = onAbrirInstrucoes,
+                        onOpcoes = irParaOpcoes,
+                        onPrivacidade = onAbrirPrivacidade,
+                        onProtecao = onAtivarProtecao
                     )
 
-                    Text(
-                        text = "Quando devo avisar você?",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .onGloballyPositioned { ancoras.opcoes = it }
-                            .semantics {
-                                heading()
-                            }
+                    CartaoDeSugestoes(
+                        alertasPendentes = alertasPendentes,
+                        totalContatos = totalContatos,
+                        analisarWhatsApp = analisarWhatsApp,
+                        onAbrirHistorico = onAbrirHistorico,
+                        onCadastrarContato = onCadastrarContato,
+                        onLigarAnalise = { onAnalisarWhatsAppChange(true) }
+                    )
+
+                    TituloDeSecao(
+                        texto = "Quando devo avisar você?",
+                        modifier = Modifier.onGloballyPositioned { ancoras.opcoes = it }
                     )
 
                     CartaoDeOpcoes(
@@ -222,9 +249,7 @@ fun ProtegeIdosoScreen(
                         onAvisoGolpeChange = onAvisoGolpeChange
                     )
 
-                    NotaDePrivacidade(
-                        onAbrirPrivacidade = onAbrirPrivacidade
-                    )
+                    NotaDePrivacidade(onAbrirPrivacidade = onAbrirPrivacidade)
                 }
             }
         }
@@ -250,39 +275,279 @@ private suspend fun rolarParaOpcoes(
     scrollState.animateScrollTo(alvo)
 }
 
+
 @Composable
-private fun BarraSuperior(
-    onAbrirMenu: () -> Unit
+private fun CabecalhoInicio(
+    protecaoAtiva: Boolean,
+    onAbrirMenu: () -> Unit,
+    onAtivarProtecao: () -> Unit
 ) {
-    Row(
+    val cores = ProtegeTema.cores
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = 12.dp,
-                vertical = 8.dp
-            )
+            .background(gradienteDoCabecalho())
     ) {
-
-        FilledTonalButton(
-            onClick = onAbrirMenu,
-            modifier = Modifier.heightIn(min = 56.dp),
-            shape = RoundedCornerShape(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Filled.Menu,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    onClick = onAbrirMenu,
+                    shape = RoundedCornerShape(50),
+                    color = Color.White.copy(alpha = 0.18f),
+                    contentColor = cores.sobreGradiente,
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(start = 12.dp, end = 18.dp, top = 10.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Menu,
+                            contentDescription = null,
+                            modifier = Modifier.size(26.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Menu", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
 
-            Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_stat_shield),
+                        contentDescription = null,
+                        tint = cores.sobreGradiente,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = "ProtegeIdoso",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = cores.sobreGradiente,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(
+                        enabled = !protecaoAtiva,
+                        role = Role.Button,
+                        onClickLabel = "Ligar a proteção",
+                        onClick = onAtivarProtecao
+                    )
+                    .semantics {
+                        contentDescription = "Escudo de proteção"
+                        stateDescription = if (protecaoAtiva) "Proteção ativada" else "Proteção desativada"
+                    }
+            ) {
+                EscudoDeProtecao(ativo = protecaoAtiva)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Menu",
-                style = MaterialTheme.typography.labelLarge
+                text = if (protecaoAtiva) "Proteção ativada" else "Proteção desligada",
+                style = MaterialTheme.typography.headlineMedium,
+                color = cores.sobreGradiente,
+                textAlign = TextAlign.Center
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = if (protecaoAtiva) {
+                    "Estamos de olho nas suas mensagens do WhatsApp."
+                } else {
+                    "Para o aplicativo funcionar, é preciso liberar uma permissão. Leva só um minuto."
+                },
+                style = MaterialTheme.typography.bodyLarge,
+                color = cores.sobreGradiente,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+
+            if (!protecaoAtiva) {
+                Spacer(modifier = Modifier.height(18.dp))
+
+                BotaoPrincipal(
+                    texto = "Ligar a proteção",
+                    onClick = onAtivarProtecao,
+                    corFundo = Color.White,
+                    corTexto = cores.gradienteTopo,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Na tela que abrir, toque em ProtegeIdoso e ative a opção.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = cores.sobreGradiente,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        OndaInferior(altura = 36.dp)
+    }
+}
+
+
+@Composable
+private fun PainelDeAtalhos(
+    protecaoAtiva: Boolean,
+    alertasPendentes: Int,
+    onHistorico: () -> Unit,
+    onContatos: () -> Unit,
+    onInstrucoes: () -> Unit,
+    onOpcoes: () -> Unit,
+    onPrivacidade: () -> Unit,
+    onProtecao: () -> Unit
+) {
+    CartaoBranco {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                BotaoCircular(
+                    rotulo = "Histórico de alertas",
+                    icone = Icons.AutoMirrored.Filled.List,
+                    onClick = onHistorico,
+                    contador = alertasPendentes,
+                    descricaoContador = "$alertasPendentes para conferir",
+                    modifier = Modifier.weight(1f)
+                )
+                BotaoCircular(
+                    rotulo = "Contatos de confiança",
+                    icone = Icons.Filled.Person,
+                    onClick = onContatos,
+                    modifier = Modifier.weight(1f)
+                )
+                BotaoCircular(
+                    rotulo = "Dicas de segurança",
+                    icone = Icons.Filled.Info,
+                    onClick = onInstrucoes,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                BotaoCircular(
+                    rotulo = "Quando avisar",
+                    icone = Icons.Filled.Notifications,
+                    onClick = onOpcoes,
+                    modifier = Modifier.weight(1f)
+                )
+                BotaoCircular(
+                    rotulo = "Privacidade",
+                    icone = Icons.Filled.Lock,
+                    onClick = onPrivacidade,
+                    modifier = Modifier.weight(1f)
+                )
+                BotaoCircular(
+                    rotulo = "Permissão de leitura",
+                    icone = if (protecaoAtiva) Icons.Filled.Settings else Icons.Filled.Warning,
+                    corIcone = if (protecaoAtiva) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        ProtegeTema.cores.alertaTexto
+                    },
+                    onClick = onProtecao,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
+
+@Composable
+private fun CartaoDeSugestoes(
+    alertasPendentes: Int,
+    totalContatos: Int,
+    analisarWhatsApp: Boolean,
+    onAbrirHistorico: () -> Unit,
+    onCadastrarContato: () -> Unit,
+    onLigarAnalise: () -> Unit
+) {
+    val cores = ProtegeTema.cores
+    val sugestoes = listOf(!analisarWhatsApp, alertasPendentes > 0, totalContatos == 0)
+    val quantidade = sugestoes.count { it }
+    if (quantidade == 0) return
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        TituloDeSecao(
+            texto = if (quantidade == 1) "1 sugestão para você" else "$quantidade sugestões para você"
+        )
+
+        CartaoBranco {
+            var mostrouAlguma = false
+
+            if (!analisarWhatsApp) {
+                ItemDeSugestao(
+                    icone = Icons.Filled.Warning,
+                    titulo = "Análise desligada",
+                    descricao = "As mensagens do WhatsApp não estão sendo verificadas.",
+                    rotuloBotao = "Ligar",
+                    onClick = onLigarAnalise,
+                    corIcone = cores.alertaTexto,
+                    fundoIcone = cores.alertaFundo
+                )
+                mostrouAlguma = true
+            }
+
+            if (alertasPendentes > 0) {
+                if (mostrouAlguma) DivisorSuave()
+                ItemDeSugestao(
+                    icone = Icons.AutoMirrored.Filled.List,
+                    titulo = if (alertasPendentes == 1) {
+                        "1 alerta para conferir"
+                    } else {
+                        "$alertasPendentes alertas para conferir"
+                    },
+                    descricao = "Veja os avisos e marque os que você já verificou.",
+                    rotuloBotao = "Ver",
+                    onClick = onAbrirHistorico,
+                    corIcone = cores.perigoTexto,
+                    fundoIcone = cores.perigoFundo
+                )
+                mostrouAlguma = true
+            }
+
+            if (totalContatos == 0) {
+                if (mostrouAlguma) DivisorSuave()
+                ItemDeSugestao(
+                    icone = Icons.Filled.Person,
+                    titulo = "Cadastre alguém de confiança",
+                    descricao = "Na dúvida sobre uma mensagem, ligue para essa pessoa com um toque.",
+                    rotuloBotao = "Cadastrar",
+                    onClick = onCadastrarContato
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun ConteudoDoMenu(
@@ -291,40 +556,44 @@ private fun ConteudoDoMenu(
     onInicio: () -> Unit,
     onProtecao: () -> Unit,
     onOpcoes: () -> Unit,
+    onHistorico: () -> Unit,
+    onDesafio: () -> Unit,
+    onContatos: () -> Unit,
     onInstrucoes: () -> Unit,
     onAjuda: () -> Unit,
     onPrivacidade: () -> Unit,
     onTermos: () -> Unit,
     onPolitica: () -> Unit
 ) {
-    ModalDrawerSheet {
+    val cores = ProtegeTema.cores
+
+    ModalDrawerSheet(
+        drawerContainerColor = MaterialTheme.colorScheme.surface,
+        windowInsets = WindowInsets(0, 0, 0, 0)
+    ) {
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState())
         ) {
-
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = 24.dp,
-                        vertical = 24.dp
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .background(gradienteDoCabecalho())
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(60.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(Color.White.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_stat_shield),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(32.dp)
+                        tint = cores.sobreGradiente,
+                        modifier = Modifier.size(34.dp)
                     )
                 }
 
@@ -332,21 +601,15 @@ private fun ConteudoDoMenu(
                     Text(
                         text = "ProtegeIdoso",
                         style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = cores.sobreGradiente
                     )
-
                     Text(
                         text = if (protecaoAtiva) "Proteção ativada" else "Proteção desativada",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = cores.sobreGradiente
                     )
                 }
             }
-
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                color = MaterialTheme.colorScheme.outline
-            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -367,6 +630,24 @@ private fun ConteudoDoMenu(
                 texto = "Quando devo avisar você?",
                 icone = Icons.Filled.Notifications,
                 onClick = onOpcoes
+            )
+
+            ItemDoMenu(
+                texto = "Histórico de alertas",
+                icone = Icons.AutoMirrored.Filled.List,
+                onClick = onHistorico
+            )
+
+            ItemDoMenu(
+                texto = "Desafio do dia",
+                icone = Icons.Filled.Star,
+                onClick = onDesafio
+            )
+
+            ItemDoMenu(
+                texto = "Contatos de confiança",
+                icone = Icons.Filled.Person,
+                onClick = onContatos
             )
 
             ItemDoMenu(
@@ -410,10 +691,9 @@ private fun ConteudoDoMenu(
                 text = "Versão $versao",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(
-                    horizontal = 28.dp,
-                    vertical = 16.dp
-                )
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(horizontal = 28.dp, vertical = 16.dp)
             )
         }
     }
@@ -441,230 +721,56 @@ private fun ItemDoMenu(
                 contentDescription = null
             )
         },
+        colors = NavigationDrawerItemDefaults.colors(
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            selectedIconColor = MaterialTheme.colorScheme.primary,
+            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            unselectedIconColor = MaterialTheme.colorScheme.primary
+        ),
         modifier = Modifier
             .padding(NavigationDrawerItemDefaults.ItemPadding)
-            .heightIn(min = 64.dp)
+            .heightIn(min = 60.dp)
     )
 }
+
 
 @Composable
 private fun CartaoAvisosBloqueados(
     onPermitirAvisos: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer
-        )
+    val cores = ProtegeTema.cores
+    CartaoColorido(
+        fundo = cores.perigoFundo,
+        texto = cores.perigoTexto
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Warning,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Text(
-                    text = "Os avisos estão bloqueados",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-
-            Text(
-                text = "O celular não está deixando o ProtegeIdoso mostrar avisos. " +
-                        "Sem isso, você não será avisado quando chegar uma mensagem suspeita.",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            Button(
-                onClick = onPermitirAvisos,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                )
-            ) {
-                Text(
-                    text = "Permitir avisos",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BotaoInstrucoes(
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.primary
-        )
-    ) {
-        Text(
-            text = "Instruções de Segurança",
-            style = MaterialTheme.typography.labelLarge
-        )
-    }
-}
-
-@Composable
-private fun Cabecalho() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_stat_shield),
-                contentDescription = "ProtegeIdoso",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(36.dp)
-            )
-        }
-
-        Column {
-
-            Text(
-                text = "ProtegeIdoso",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.semantics {
-                    heading()
-                }
+                imageVector = Icons.Filled.Warning,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
             )
 
             Text(
-                text = "Proteção contra golpes no WhatsApp",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Os avisos estão bloqueados",
+                style = MaterialTheme.typography.titleLarge
             )
         }
-    }
-}
 
-@Composable
-private fun CartaoDeStatus(
-    protecaoAtiva: Boolean,
-    onAtivarProtecao: () -> Unit
-) {
-
-    val fundo =
-        if (protecaoAtiva)
-            MaterialTheme.colorScheme.primaryContainer
-        else
-            MaterialTheme.colorScheme.secondaryContainer
-
-    val texto =
-        if (protecaoAtiva)
-            MaterialTheme.colorScheme.onPrimaryContainer
-        else
-            MaterialTheme.colorScheme.onSecondaryContainer
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = fundo,
-            contentColor = texto
+        Text(
+            text = "O celular não está deixando o ProtegeIdoso mostrar avisos. " +
+                    "Sem isso, você não será avisado quando chegar uma mensagem suspeita.",
+            style = MaterialTheme.typography.bodyLarge
         )
-    ) {
 
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-
-                Icon(
-                    imageVector =
-                        if (protecaoAtiva)
-                            Icons.Filled.CheckCircle
-                        else
-                            Icons.Filled.Warning,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp)
-                )
-
-                Text(
-                    text =
-                        if (protecaoAtiva)
-                            "Proteção ativada"
-                        else
-                            "Proteção desativada",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-
-            Text(
-                text =
-                    if (protecaoAtiva) {
-                        "Estamos de olho nas suas mensagens do WhatsApp."
-                    } else {
-                        "Para o aplicativo funcionar, é preciso liberar uma permissão. Leva só um minuto."
-                    },
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            if (!protecaoAtiva) {
-
-                Button(
-                    onClick = onAtivarProtecao,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 64.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = texto,
-                        contentColor = fundo
-                    )
-                ) {
-                    Text(
-                        text = "Ligar a proteção",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-
-                Text(
-                    text = "Na tela que abrir, toque em ProtegeIdoso e ative a opção.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
+        BotaoPrincipal(
+            texto = "Permitir avisos",
+            onClick = onPermitirAvisos,
+            corFundo = cores.botaoPerigo,
+            corTexto = cores.sobreBotaoPerigo
+        )
     }
 }
 
@@ -672,42 +778,25 @@ private fun CartaoDeStatus(
 private fun BotaoPrecisoDeAjuda(
     onClick: () -> Unit
 ) {
+    val cores = ProtegeTema.cores
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
-        Button(
+        BotaoPrincipal(
+            texto = "Preciso de ajuda",
             onClick = onClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError
-            )
-        ) {
-
-            Icon(
-                imageVector = Icons.Filled.Phone,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp)
-            )
-
-            Spacer(
-                modifier = Modifier.width(12.dp)
-            )
-
-            Text(
-                text = "Preciso de ajuda",
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
+            icone = Icons.Filled.Phone,
+            corFundo = cores.botaoPerigo,
+            corTexto = cores.sobreBotaoPerigo,
+            alturaMinima = 68.dp
+        )
 
         Text(
             text = "Abre o WhatsApp para você pedir orientação ou denunciar um golpe.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -721,60 +810,52 @@ private fun CartaoDeOpcoes(
     onAvisoSuspeitoChange: (Boolean) -> Unit,
     onAvisoGolpeChange: (Boolean) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline
+    val cores = ProtegeTema.cores
+
+    CartaoBranco {
+        LinhaDeOpcao(
+            icone = Icons.Filled.CheckCircle,
+            corIcone = MaterialTheme.colorScheme.primary,
+            fundoIcone = MaterialTheme.colorScheme.primaryContainer,
+            titulo = "Analisar mensagens",
+            descricao = "Procura sinais de golpe nas mensagens do WhatsApp.",
+            marcado = analisarWhatsApp,
+            onMudar = onAnalisarWhatsAppChange
         )
-    ) {
 
-        Column {
+        DivisorSuave()
 
-            LinhaDeOpcao(
-                titulo = "Analisar mensagens",
-                descricao = "Procura sinais de golpe nas mensagens do WhatsApp.",
-                marcado = analisarWhatsApp,
-                onMudar = onAnalisarWhatsAppChange
-            )
+        LinhaDeOpcao(
+            icone = Icons.Filled.Info,
+            corIcone = cores.alertaTexto,
+            fundoIcone = cores.alertaFundo,
+            titulo = "Aviso de mensagem suspeita",
+            descricao = "Mostra um aviso quando algo parece estranho.",
+            marcado = avisoSuspeito,
+            habilitado = analisarWhatsApp,
+            onMudar = onAvisoSuspeitoChange
+        )
 
-            Divisor()
+        DivisorSuave()
 
-            LinhaDeOpcao(
-                titulo = "Aviso de mensagem suspeita",
-                descricao = "Mostra um aviso quando algo parece estranho.",
-                marcado = avisoSuspeito,
-                habilitado = analisarWhatsApp,
-                onMudar = onAvisoSuspeitoChange
-            )
-
-            Divisor()
-
-            LinhaDeOpcao(
-                titulo = "Aviso de possível golpe",
-                descricao = "Mostra um aviso forte quando há grande chance de golpe.",
-                marcado = avisoGolpe,
-                habilitado = analisarWhatsApp,
-                onMudar = onAvisoGolpeChange
-            )
-        }
+        LinhaDeOpcao(
+            icone = Icons.Filled.Warning,
+            corIcone = cores.perigoTexto,
+            fundoIcone = cores.perigoFundo,
+            titulo = "Aviso de possível golpe",
+            descricao = "Mostra um aviso forte quando há grande chance de golpe.",
+            marcado = avisoGolpe,
+            habilitado = analisarWhatsApp,
+            onMudar = onAvisoGolpeChange
+        )
     }
 }
 
 @Composable
-private fun Divisor() {
-    HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 20.dp),
-        color = MaterialTheme.colorScheme.outline
-    )
-}
-
-@Composable
 private fun LinhaDeOpcao(
+    icone: ImageVector,
+    corIcone: Color,
+    fundoIcone: Color,
     titulo: String,
     descricao: String,
     marcado: Boolean,
@@ -800,18 +881,19 @@ private fun LinhaDeOpcao(
                 role = Role.Switch,
                 onValueChange = onMudar
             )
-            .heightIn(min = 72.dp)
+            .heightIn(min = 76.dp)
             .padding(
-                horizontal = 20.dp,
+                horizontal = 16.dp,
                 vertical = 16.dp
             ),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        IconeEmCirculo(icone = icone, cor = corIcone, fundo = fundoIcone, tamanho = 44.dp)
 
         Column(
             modifier = Modifier.weight(1f)
         ) {
-
             Text(
                 text = titulo,
                 style = MaterialTheme.typography.titleMedium,
@@ -824,10 +906,6 @@ private fun LinhaDeOpcao(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
-        Spacer(
-            modifier = Modifier.width(16.dp)
-        )
 
         Switch(
             checked = marcado,
@@ -844,13 +922,11 @@ private fun NotaDePrivacidade(
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top
         ) {
-
             Icon(
                 imageVector = Icons.Filled.Lock,
                 contentDescription = "Privacidade",
