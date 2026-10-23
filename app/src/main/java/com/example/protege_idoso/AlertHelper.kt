@@ -32,7 +32,9 @@ object AlertHelper {
     private const val ROTULO_MOTIVO = "Por quê:"
     private const val ROTULO_ORIENTACAO = "O que fazer:"
 
-    private fun textoCompleto(resultado: RiskResult): CharSequence {
+    private const val ROTULO_OFICIAL = "Canal oficial:"
+
+    private fun textoCompleto(resultado: RiskResult, dicaOficial: String?): CharSequence {
         val texto = SpannableStringBuilder()
 
         adicionarRotulo(texto, ROTULO_MOTIVO)
@@ -41,8 +43,21 @@ object AlertHelper {
         adicionarRotulo(texto, ROTULO_ORIENTACAO)
         texto.append(" ").append(resultado.orientacao)
 
+        if (dicaOficial != null) {
+            texto.append("\n\n")
+            adicionarRotulo(texto, ROTULO_OFICIAL)
+            texto.append(" ").append(dicaOficial)
+        }
+
         return texto
     }
+
+    private fun intentAoTocar(context: Context, idAnalise: Long?): Intent =
+        if (idAnalise != null && idAnalise > 0) {
+            HistoricoActivity.criarIntent(context, idAnalise)
+        } else {
+            Intent(context, InstrucoesActivity::class.java)
+        }
 
     private fun adicionarRotulo(texto: SpannableStringBuilder, rotulo: String) {
         val inicio = texto.length
@@ -67,10 +82,15 @@ object AlertHelper {
         .setContentText("Desbloqueie o celular para ver o aviso.")
         .build()
 
-    fun mostrarAlertaSuspeito(context: Context, resultado: RiskResult) {
+    fun mostrarAlertaSuspeito(
+        context: Context,
+        resultado: RiskResult,
+        idAnalise: Long? = null,
+        dicaOficial: String? = null
+    ) {
         criarCanais(context)
 
-        val intent = Intent(context, InstrucoesActivity::class.java)
+        val intent = intentAoTocar(context, idAnalise);
 
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -82,12 +102,11 @@ object AlertHelper {
         val notificacao = NotificationCompat.Builder(context, CANAL_SUSPEITO)
             .setSmallIcon(R.drawable.ic_stat_shield)
             .setColor(COR_SUSPEITO.toInt())
-
             .setContentTitle(TITULO_SUSPEITO)
             .setContentText(resultado.explicacao)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(textoCompleto(resultado))
+                    .bigText(textoCompleto(resultado, dicaOficial))
             )
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(
@@ -106,10 +125,15 @@ object AlertHelper {
         manager.notify(ID_SUSPEITO, notificacao)
     }
 
-    fun mostrarAlertaGolpe(context: Context, resultado: RiskResult) {
+    fun mostrarAlertaGolpe(
+        context: Context,
+        resultado: RiskResult,
+        idAnalise: Long? = null,
+        dicaOficial: String? = null
+    ) {
         criarCanais(context)
 
-        val intent = Intent(context, InstrucoesActivity::class.java)
+        val intent = intentAoTocar(context, idAnalise)
 
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -126,7 +150,7 @@ object AlertHelper {
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .setBigContentTitle(TITULO_GOLPE)
-                    .bigText(textoCompleto(resultado))
+                    .bigText(textoCompleto(resultado, dicaOficial))
                     .setSummaryText("Toque para ver como se proteger")
             )
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)

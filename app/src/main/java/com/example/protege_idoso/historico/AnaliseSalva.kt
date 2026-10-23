@@ -10,7 +10,8 @@ data class AnaliseSalva(
     val orientacao: String,
     val origem: String,
     val status: StatusAnalise = StatusAnalise.PENDENTE,
-    val atualizadoEm: Long = dataHora
+    val atualizadoEm: Long = dataHora,
+    val instituicao: String? = null
 )
 
 enum class StatusAnalise(val rotulo: String) {

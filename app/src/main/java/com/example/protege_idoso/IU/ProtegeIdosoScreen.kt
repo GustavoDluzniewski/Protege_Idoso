@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DrawerValue
@@ -94,6 +93,7 @@ fun ProtegeIdosoScreen(
     versao: String,
     alertasPendentes: Int,
     totalContatos: Int,
+    totalInstituicoes: Int,
     desafioLiberadoEm: Long,
     desafioEmAndamento: Boolean,
     onAnalisarWhatsAppChange: (Boolean) -> Unit,
@@ -107,6 +107,8 @@ fun ProtegeIdosoScreen(
     onAbrirDesafio: () -> Unit,
     onAbrirContatos: () -> Unit,
     onCadastrarContato: () -> Unit,
+    onAbrirInstituicoes: () -> Unit,
+    onEscolherInstituicoes: () -> Unit,
     onAbrirPrivacidade: () -> Unit,
     onAbrirTermos: () -> Unit,
     onAbrirPolitica: () -> Unit
@@ -158,6 +160,10 @@ fun ProtegeIdosoScreen(
                 onContatos = {
                     scope.launch { drawerState.close() }
                     onAbrirContatos()
+                },
+                onInstituicoes = {
+                    scope.launch { drawerState.close() }
+                    onAbrirInstituicoes()
                 },
                 onInstrucoes = {
                     scope.launch { drawerState.close() }
@@ -216,22 +222,23 @@ fun ProtegeIdosoScreen(
                     )
 
                     PainelDeAtalhos(
-                        protecaoAtiva = protecaoAtiva,
                         alertasPendentes = alertasPendentes,
                         onHistorico = onAbrirHistorico,
                         onContatos = onAbrirContatos,
                         onInstrucoes = onAbrirInstrucoes,
                         onOpcoes = irParaOpcoes,
                         onPrivacidade = onAbrirPrivacidade,
-                        onProtecao = onAtivarProtecao
+                        onInstituicoes = onAbrirInstituicoes
                     )
 
                     CartaoDeSugestoes(
                         alertasPendentes = alertasPendentes,
                         totalContatos = totalContatos,
+                        totalInstituicoes = totalInstituicoes,
                         analisarWhatsApp = analisarWhatsApp,
                         onAbrirHistorico = onAbrirHistorico,
                         onCadastrarContato = onCadastrarContato,
+                        onEscolherInstituicoes = onEscolherInstituicoes,
                         onLigarAnalise = { onAnalisarWhatsAppChange(true) }
                     )
 
@@ -416,14 +423,13 @@ private fun CabecalhoInicio(
 
 @Composable
 private fun PainelDeAtalhos(
-    protecaoAtiva: Boolean,
     alertasPendentes: Int,
     onHistorico: () -> Unit,
     onContatos: () -> Unit,
     onInstrucoes: () -> Unit,
     onOpcoes: () -> Unit,
     onPrivacidade: () -> Unit,
-    onProtecao: () -> Unit
+    onInstituicoes: () -> Unit
 ) {
     CartaoBranco {
         Column(
@@ -466,14 +472,9 @@ private fun PainelDeAtalhos(
                     modifier = Modifier.weight(1f)
                 )
                 BotaoCircular(
-                    rotulo = "Permissão de leitura",
-                    icone = if (protecaoAtiva) Icons.Filled.Settings else Icons.Filled.Warning,
-                    corIcone = if (protecaoAtiva) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        ProtegeTema.cores.alertaTexto
-                    },
-                    onClick = onProtecao,
+                    rotulo = "Minhas instituições",
+                    icone = IconeInstituicao,
+                    onClick = onInstituicoes,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -485,13 +486,20 @@ private fun PainelDeAtalhos(
 private fun CartaoDeSugestoes(
     alertasPendentes: Int,
     totalContatos: Int,
+    totalInstituicoes: Int,
     analisarWhatsApp: Boolean,
     onAbrirHistorico: () -> Unit,
     onCadastrarContato: () -> Unit,
+    onEscolherInstituicoes: () -> Unit,
     onLigarAnalise: () -> Unit
 ) {
     val cores = ProtegeTema.cores
-    val sugestoes = listOf(!analisarWhatsApp, alertasPendentes > 0, totalContatos == 0)
+    val sugestoes = listOf(
+        !analisarWhatsApp,
+        alertasPendentes > 0,
+        totalContatos == 0,
+        totalInstituicoes == 0
+    )
     val quantidade = sugestoes.count { it }
     if (quantidade == 0) return
 
@@ -543,6 +551,18 @@ private fun CartaoDeSugestoes(
                     rotuloBotao = "Cadastrar",
                     onClick = onCadastrarContato
                 )
+                mostrouAlguma = true
+            }
+
+            if (totalInstituicoes == 0) {
+                if (mostrouAlguma) DivisorSuave()
+                ItemDeSugestao(
+                    icone = IconeInstituicao,
+                    titulo = "Quais instituições você utiliza?",
+                    descricao = "Escolha seus bancos e tenha os números oficiais à mão.",
+                    rotuloBotao = "Escolher",
+                    onClick = onEscolherInstituicoes
+                )
             }
         }
     }
@@ -559,6 +579,7 @@ private fun ConteudoDoMenu(
     onHistorico: () -> Unit,
     onDesafio: () -> Unit,
     onContatos: () -> Unit,
+    onInstituicoes: () -> Unit,
     onInstrucoes: () -> Unit,
     onAjuda: () -> Unit,
     onPrivacidade: () -> Unit,
@@ -648,6 +669,12 @@ private fun ConteudoDoMenu(
                 texto = "Contatos de confiança",
                 icone = Icons.Filled.Person,
                 onClick = onContatos
+            )
+
+            ItemDoMenu(
+                texto = "Minhas instituições",
+                icone = IconeInstituicao,
+                onClick = onInstituicoes
             )
 
             ItemDoMenu(

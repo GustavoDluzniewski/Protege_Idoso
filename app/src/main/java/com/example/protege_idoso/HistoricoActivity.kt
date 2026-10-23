@@ -83,6 +83,11 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.protege_idoso.instituicoes.AcoesDeCanal
+import com.example.protege_idoso.instituicoes.CanalOficial
+import com.example.protege_idoso.instituicoes.CatalogoInstituicoes
+import com.example.protege_idoso.instituicoes.Instituicao
+import com.example.protege_idoso.instituicoes.InstituicoesRepository
 
 class HistoricoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +96,7 @@ class HistoricoActivity : ComponentActivity() {
 
         val repositorio = HistoricoRepository(applicationContext)
         val repositorioContatos = ContatosRepository(applicationContext)
+        val repositorioInstituicoes = InstituicoesRepository(applicationContext)
         val idInicial = intent.getLongExtra(EXTRA_ID_ANALISE, -1L).takeIf { it > 0 }
 
         setContent {
@@ -98,6 +104,7 @@ class HistoricoActivity : ComponentActivity() {
                 HistoricoScreen(
                     repositorio = repositorio,
                     repositorioContatos = repositorioContatos,
+                    repositorioInstituicoes = repositorioInstituicoes,
                     idInicial = idInicial,
                     onVoltar = { finish() },
                     onAbrirInstrucoes = {
@@ -105,6 +112,9 @@ class HistoricoActivity : ComponentActivity() {
                     },
                     onAbrirContatos = {
                         startActivity(ContatosActivity.criarIntent(this))
+                    },
+                    onAbrirInstituicoes = { cadastrada ->
+                        startActivity(InstituicoesActivity.criarIntent(this, abrirEscolha = !cadastrada))
                     }
                 )
             }
@@ -128,16 +138,19 @@ private fun formatarData(millis: Long): String =
 fun HistoricoScreen(
     repositorio: HistoricoRepository,
     repositorioContatos: ContatosRepository,
+    repositorioInstituicoes: InstituicoesRepository,
     idInicial: Long?,
     onVoltar: () -> Unit,
     onAbrirInstrucoes: () -> Unit,
-    onAbrirContatos: () -> Unit
+    onAbrirContatos: () -> Unit,
+    onAbrirInstituicoes: (cadastrada: Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var analises by remember { mutableStateOf<List<AnaliseSalva>>(emptyList()) }
     var contatos by remember { mutableStateOf<List<ContatoConfianca>>(emptyList()) }
+    var instituicoes by remember { mutableStateOf<List<Instituicao>>(emptyList()) }
     var carregando by remember { mutableStateOf(true) }
     var idSelecionado by rememberSaveable { mutableStateOf(idInicial ?: -1L) }
     var confirmarLimpeza by remember { mutableStateOf(false) }
@@ -148,8 +161,10 @@ fun HistoricoScreen(
             val (novasAnalises, novosContatos) = withContext(Dispatchers.IO) {
                 repositorio.listar() to repositorioContatos.listar()
             }
+            val novasInstituicoes = withContext(Dispatchers.IO) { repositorioInstituicoes.listar() }
             analises = novasAnalises
             contatos = novosContatos
+            instituicoes = novasInstituicoes
             carregando = false
         }
     }
@@ -237,6 +252,7 @@ fun HistoricoScreen(
                 selecionada != null -> DetalheDaAnalise(
                     analise = selecionada,
                     contatos = contatos,
+                    instituicoes = instituicoes,
                     onMudarStatus = { status ->
                         scope.launch {
                             withContext(Dispatchers.IO) {
@@ -249,7 +265,9 @@ fun HistoricoScreen(
                     onExcluir = { confirmarExclusao = selecionada },
                     onAbrirInstrucoes = onAbrirInstrucoes,
                     onLigar = { AcoesDeContato.ligar(context, it) },
-                    onAbrirContatos = onAbrirContatos
+                    onAbrirContatos = onAbrirContatos,
+                    onAbrirCanal = { AcoesDeCanal.abrir(context, it) },
+                    onAbrirInstituicoes = onAbrirInstituicoes
                 )
 
                 else -> ListaDeAnalises(
@@ -467,13 +485,22 @@ private fun CartaoResumo(
 private fun DetalheDaAnalise(
     analise: AnaliseSalva,
     contatos: List<ContatoConfianca>,
+    instituicoes: List<Instituicao>,
     onMudarStatus: (StatusAnalise) -> Unit,
     onExcluir: () -> Unit,
     onAbrirInstrucoes: () -> Unit,
     onLigar: (ContatoConfianca) -> Unit,
-    onAbrirContatos: () -> Unit
+    onAbrirContatos: () -> Unit,
+    onAbrirCanal: (CanalOficial) -> Unit,
+    onAbrirInstituicoes: (cadastrada: Boolean) -> Unit
 ) {
+
     val cores = coresDoNivel(analise.nivel)
+
+    val modeloCitado = CatalogoInstituicoes.porCodigo(analise.instituicao)
+
+    val instituicaoCitada = instituicoes.firstOrNull { it.codigo != null && it.codigo == analise.instituicao
+    }
 
     Column(
         modifier = Modifier
@@ -524,6 +551,18 @@ private fun DetalheDaAnalise(
 
         SecaoTexto(titulo = "Por que avisamos", texto = analise.explicacao)
         SecaoTexto(titulo = "O que fazer", texto = analise.orientacao)
+
+        if (modeloCitado != null) {
+            val canaisParaMostrar = instituicaoCitada?.canais?.takeIf { it.isNotEmpty() }
+                ?: AcoesDeCanal.canaisDoCatalogo(modeloCitado)
+            CartaoCanaisOficiais(
+                nomeInstituicao = instituicaoCitada?.nome ?: modeloCitado.nome,
+                canais = canaisParaMostrar,
+                cadastrada = instituicaoCitada != null,
+                onAbrirCanal = onAbrirCanal,
+                onGerenciar = { onAbrirInstituicoes(instituicaoCitada != null) }
+            )
+        }
 
         com.example.protege_idoso.CartaoPecaAjuda(
             contatos = contatos,

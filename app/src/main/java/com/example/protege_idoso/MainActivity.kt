@@ -29,6 +29,7 @@ import com.example.protege_idoso.ui.theme.Protege_IdosoTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.protege_idoso.instituicoes.InstituicoesRepository
 
 class MainActivity : ComponentActivity() {
     private lateinit var preferencias: Preferencias
@@ -42,6 +43,7 @@ class MainActivity : ComponentActivity() {
 
     private var alertasPendentes by mutableStateOf(0)
     private var totalContatos by mutableStateOf(0)
+    private var totalInstituicoes by mutableStateOf(0)
     private var desafioLiberadoEm by mutableStateOf(0L)
     private var desafioEmAndamento by mutableStateOf(false)
 
@@ -76,8 +78,12 @@ class MainActivity : ComponentActivity() {
                     HistoricoRepository(applicationContext).contarPendentes() to
                             ContatosRepository(applicationContext).contar()
                 }
+                val instituicoes = withContext(Dispatchers.IO) {
+                    InstituicoesRepository(applicationContext).contar()
+                }
                 alertasPendentes = pendentes
                 totalContatos = contatos
+                totalInstituicoes = instituicoes
             } catch (e: Exception) {
                 android.util.Log.e(
                     "ProtegeIdoso",
@@ -185,6 +191,7 @@ class MainActivity : ComponentActivity() {
                     versao = BuildConfig.VERSION_NAME,
                     alertasPendentes = alertasPendentes,
                     totalContatos = totalContatos,
+                    totalInstituicoes = totalInstituicoes,
                     desafioLiberadoEm = desafioLiberadoEm,
                     desafioEmAndamento = desafioEmAndamento,
                     onAnalisarWhatsAppChange = {
@@ -227,6 +234,12 @@ class MainActivity : ComponentActivity() {
                     },
                     onCadastrarContato = {
                         startActivity(ContatosActivity.criarIntent(this, novoContato = true))
+                    },
+                    onAbrirInstituicoes = {
+                        startActivity(InstituicoesActivity.criarIntent(this))
+                    },
+                    onEscolherInstituicoes = {
+                        startActivity(InstituicoesActivity.criarIntent(this, abrirEscolha = true))
                     },
                     onAbrirPrivacidade = {
                         startActivity(Intent(this, PrivacidadeActivity::class.java))

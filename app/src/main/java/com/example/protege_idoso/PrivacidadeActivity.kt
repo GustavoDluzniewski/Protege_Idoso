@@ -138,6 +138,8 @@ class PrivacidadeActivity : ComponentActivity() {
                 .limparTudo()
             com.example.protege_idoso.contatos.ContatosRepository(applicationContext)
                 .limparTudo()
+            com.example.protege_idoso.instituicoes.InstituicoesRepository(applicationContext)
+                .limparTudo()
             com.example.protege_idoso.quiz.QuizRepository(applicationContext)
                 .apagarTudo()
         } catch (e: Exception) {
@@ -188,7 +190,7 @@ fun PrivacidadeScreen(
             titulo = "Revogar consentimento?",
             texto = "O ProtegeIdoso vai parar de analisar as suas mensagens e " +
                     "apagar, neste celular, o registro do seu aceite, as suas " +
-                    "escolhas, o histórico de alertas, os contatos de confiança " +
+                    "escolhas, o histórico de alertas, os contatos de confiança, as suas instituições " +
                     "e o placar do desafio do dia. " +
                     "Para usar de novo, será preciso aceitar os Termos " +
                     "de Uso e a Política de Privacidade outra vez.\n\n" +
@@ -493,7 +495,7 @@ private fun CartaoDeGarantias() {
         "Ignora na hora as notificações de outros aplicativos.",
         "Não guarda suas mensagens no celular.",
         "Não envia o nome nem o número de quem escreveu.",
-        "Não envia o histórico nem os contatos de confiança para lugar nenhum."
+        "Não envia o histórico, os contatos de confiança nem as suas instituições para lugar nenhum."
     )
 
     CartaoBranco {

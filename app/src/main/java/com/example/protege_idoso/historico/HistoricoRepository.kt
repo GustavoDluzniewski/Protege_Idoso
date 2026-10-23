@@ -19,6 +19,8 @@ class HistoricoRepository(context: Context) {
             put(Analises.ORIGEM, analise.origem)
             put(Analises.STATUS, analise.status.name)
             put(Analises.ATUALIZADO_EM, analise.atualizadoEm)
+            if (analise.instituicao != null) put(Analises.INSTITUICAO, analise.instituicao)
+            else putNull(Analises.INSTITUICAO)
         }
         val id = banco.writableDatabase.insert(Analises.TABELA, null, valores)
         apagarExcedentes()
@@ -113,7 +115,10 @@ class HistoricoRepository(context: Context) {
             orientacao = getString(getColumnIndexOrThrow(Analises.ORIENTACAO)),
             origem = getString(getColumnIndexOrThrow(Analises.ORIGEM)),
             status = StatusAnalise.deTexto(getString(getColumnIndexOrThrow(Analises.STATUS))),
-            atualizadoEm = getLong(getColumnIndexOrThrow(Analises.ATUALIZADO_EM))
+            atualizadoEm = getLong(getColumnIndexOrThrow(Analises.ATUALIZADO_EM)),
+            instituicao = getColumnIndex(Analises.INSTITUICAO).let { indice ->
+                if (indice < 0 || isNull(indice)) null else getString(indice)
+            }
         )
     }
 

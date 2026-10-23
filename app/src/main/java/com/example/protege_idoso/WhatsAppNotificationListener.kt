@@ -11,6 +11,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
+import com.example.protege_idoso.instituicoes.CatalogoInstituicoes
+import com.example.protege_idoso.instituicoes.DetectorDeInstituicao
+import com.example.protege_idoso.instituicoes.InstituicoesRepository
+import com.example.protege_idoso.instituicoes.NumeroOficial
+import com.example.protege_idoso.instituicoes.TipoCanal
 
 class WhatsAppNotificationListener : NotificationListenerService() {
     private var ultimaMensagemAnalisada = ""
@@ -27,9 +32,13 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    private fun salvarNoHistorico(resultado: RiskResult, nomePacote: String) {
-        try {
-            HistoricoRepository(applicationContext).salvar(
+    private fun salvarNoHistorico(
+        resultado: RiskResult,
+        nomePacote: String,
+        instituicao: String?
+    ): Long? {
+        return try {
+            val id = HistoricoRepository(applicationContext).salvar(
                 AnaliseSalva(
                     dataHora = System.currentTimeMillis(),
                     nivel = resultado.nivel,
@@ -39,16 +48,34 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                         "WhatsApp Business"
                     } else {
                         "WhatsApp"
-                    }
+                    },
+                    instituicao = instituicao
                 )
             )
             Log.d("ProtegeIdoso", "Resultado salvo no histórico.")
+            id
         } catch (e: Exception) {
             Log.e(
                 "ProtegeIdoso",
                 "Não foi possível salvar no histórico: ${e.javaClass.simpleName}"
             )
+            null
         }
+    }
+
+    private fun dicaDoCanalOficial(codigo: String?): String? {
+        val modelo = CatalogoInstituicoes.porCodigo(codigo) ?: return null
+        val cadastrada = try {
+            InstituicoesRepository(applicationContext).buscarPorCodigo(modelo.codigo)
+        } catch (e: Exception) {
+            null
+        }
+        val telefone = cadastrada?.telefones?.firstOrNull()?.valor
+            ?: modelo.canais.firstOrNull { it.tipo == TipoCanal.TELEFONE }?.valor
+            ?: return null
+        val nome = cadastrada?.nome ?: modelo.nome
+        return "$nome ${NumeroOficial.formatar(telefone)}. " +
+                "Não use números ou links que vieram na mensagem."
     }
 
     override fun onListenerConnected() {
@@ -246,10 +273,18 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                             "Nenhum alerta exibido (mensagem segura ou aviso desligado nas opções)."
                         )
                     } else {
-                        salvarNoHistorico(
+                        val instituicaoCitada = (
+                                DetectorDeInstituicao.detectar(mensagemSanitizada)
+                                    ?: DetectorDeInstituicao.detectar(resultadoFinal.explicacao)
+                                )?.codigo
+
+                        val idAnalise = salvarNoHistorico(
                             resultado = resultadoFinal,
-                            nomePacote = nomePacote
+                            nomePacote = nomePacote,
+                            instituicao = instituicaoCitada
                         )
+
+                        val dicaOficial = dicaDoCanalOficial(instituicaoCitada)
 
                         when (resultadoFinal.nivel) {
                             RiskLevel.SEGURO -> Unit
@@ -257,14 +292,18 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                             RiskLevel.SUSPEITO -> {
                                 AlertHelper.mostrarAlertaSuspeito(
                                     context = applicationContext,
-                                    resultado = resultadoFinal
+                                    resultado = resultadoFinal,
+                                    idAnalise = idAnalise,
+                                    dicaOficial = dicaOficial
                                 )
                             }
 
                             RiskLevel.POSSIVEL_GOLPE -> {
                                 AlertHelper.mostrarAlertaGolpe(
                                     context = applicationContext,
-                                    resultado = resultadoFinal
+                                    resultado = resultadoFinal,
+                                    idAnalise = idAnalise,
+                                    dicaOficial = dicaOficial
                                 )
                             }
                         }

@@ -214,7 +214,22 @@ fun CabecalhoDeTela(
     }
 }
 
-
+val IconeInstituicao: ImageVector by lazy {
+    ImageVector.Builder(
+        name = "Instituicao",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    )
+        .addPath(
+            pathData = addPathNodes(
+                "M4,10h3v7H4zM10.5,10h3v7h-3zM2,19h20v3H2zM17,10h3v7h-3zM12,1L2,6v2h20V6z"
+            ),
+            fill = SolidColor(Color.Black)
+        )
+        .build()
+}
 private const val CAMINHO_ESCUDO =
     "M12,1L3,5v6c0,5.55 3.84,10.74 9,12 5.16,-1.26 9,-6.45 9,-12L21,5l-9,-4z"
 private const val CAMINHO_METADE_ESQUERDA =

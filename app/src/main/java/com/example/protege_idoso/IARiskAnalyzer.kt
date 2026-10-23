@@ -17,7 +17,7 @@ object IARiskAnalyzer {
     private const val TAG = "ProtegeIdoso"
 
     private const val URL_BASE =
-        "https://marc-thumbs-vocals-provincial.trycloudflare.com"
+        "https://wooden-lyrics-ministries-different.trycloudflare.com"
 
     private const val URL_REGISTRAR =
         "$URL_BASE/instalacoes/registrar"
