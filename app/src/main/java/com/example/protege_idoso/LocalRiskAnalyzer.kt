@@ -54,15 +54,20 @@ object LocalRiskAnalyzer {
         val temPix = texto.contains("pix")
         val temSenha = texto.contains("senha")
         val temCodigo = texto.contains("código") || texto.contains("codigo")
+        // "parabéns" e "ganhou" sozinhos aparecem em aniversários e conquistas.
         val temPremio = texto.contains("prêmio") ||
                 texto.contains("premio") ||
                 texto.contains("sorteio") ||
-                texto.contains("ganhou") ||
-                texto.contains("parabéns") ||
-                texto.contains("parabens")
+                texto.contains("sorteado") ||
+                texto.contains("você ganhou") ||
+                texto.contains("voce ganhou")
 
+        // "agora" sozinho é comum demais ("chego agora"): só conta junto de um pedido.
         val temUrgencia = texto.contains("urgente") ||
-                texto.contains("agora") ||
+                texto.contains("responda agora") ||
+                texto.contains("pague agora") ||
+                texto.contains("clique agora") ||
+                texto.contains("acesse agora") ||
                 texto.contains("imediatamente") ||
                 texto.contains("última chance") ||
                 texto.contains("ultima chance") ||
@@ -71,12 +76,10 @@ object LocalRiskAnalyzer {
                 texto.contains("suspenso") ||
                 texto.contains("suspensa")
 
+        // A sanitização roda antes e troca os links por [LINK].
         val temLink = texto.contains("[link]") ||
                 texto.contains("http") ||
                 texto.contains("www.") ||
-                texto.contains(".com") ||
-                texto.contains(".net") ||
-                texto.contains(".br") ||
                 texto.contains("bit.ly") ||
                 texto.contains("tinyurl") ||
                 texto.contains("encurtador")
@@ -99,11 +102,15 @@ object LocalRiskAnalyzer {
                 texto.contains("informe seu cartao") ||
                 texto.contains("digite seu cartao")
 
-        val imitaInstituicao = texto.contains("banco") ||
-                texto.contains("gov") ||
+        // "banco", "caixa" e "gov" sozinhos aparecem em conversas normais.
+        val imitaInstituicao = texto.contains("seu banco") ||
+                texto.contains("banco do brasil") ||
+                texto.contains("banco central") ||
+                texto.contains("gov.br") ||
                 texto.contains("governo") ||
                 texto.contains("receita federal") ||
-                texto.contains("caixa") ||
+                texto.contains("caixa econômica") ||
+                texto.contains("caixa economica") ||
                 texto.contains("nubank") ||
                 texto.contains("bradesco") ||
                 texto.contains("itau") ||
@@ -180,8 +187,18 @@ object LocalRiskAnalyzer {
                             texto.contains("pix") ||
                             texto.contains("clique no link"))
 
+        val pedeDadosPorLink =
+            (texto.contains("[link]") ||
+                    texto.contains("http") ||
+                    texto.contains("www.")) &&
+                    listOf(
+                        "confirme seus dados", "atualize seus dados",
+                        "dados pessoais", "seu cpf", "seu cartão", "seu cartao"
+                    ).any { texto.contains(it) }
+
         return pedeSenha ||
                 pedeCodigo ||
+                pedeDadosPorLink ||
                 pedeTransferencia ||
                 pedeDinheiroComoFamiliar ||
                 ameacaComBloqueio
