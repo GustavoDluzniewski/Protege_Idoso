@@ -139,8 +139,8 @@ object TextosLegais {
             "2. Quais dados tratamos",
             listOf(
                 "• Conteúdo das notificações de mensagens do WhatsApp: o texto que aparece no aviso do celular. O nome de quem enviou é usado apenas para não analisar a mesma mensagem duas vezes. Ele não é enviado e não é gravado.",
-                "• Texto da mensagem que tiver sinais de risco, depois de esconder e-mails, telefones, CPF, links e chaves Pix (trocados por marcações como [CPF] ou [LINK]).",
-                "• Endereços dos links da mensagem: enviados à parte, sem o resto do texto, apenas para verificar se o site é conhecido ou perigoso. Um link pode conter dados de quem o criou (por exemplo, um código de rastreio); por isso ele é usado só para essa verificação.",
+                "• Texto da mensagem que tiver sinais de risco, depois de esconder e-mails, telefones, CPF, RG, cartões, agência e conta, CEP, links e chaves Pix (trocados por marcações como [CPF] ou [LINK]).",
+                "• Endereços dos links da mensagem: enviados à parte, sem o resto do texto, apenas para verificar se o site é conhecido ou perigoso. Um link pode conter dados de quem o criou (por exemplo, um código de rastreio); por isso ele é usado só para essa verificação, e e-mails e CPF que aparecem dentro do link são retirados antes do envio.",
                 "• Suas escolhas no aplicativo: se a análise e cada tipo de aviso estão ligados.",
                 "• Registro do seu aceite: qual versão destes documentos você aceitou e quando. Fica somente no seu celular.",
                 "• Histórico de alertas: para cada aviso mostrado, o nível de risco, a explicação, a orientação, a data e a hora. Não inclui o texto da mensagem, o nome nem o número de quem enviou. Fica somente no seu celular.",
@@ -164,7 +164,7 @@ object TextosLegais {
             listOf(
                 "• 1) O aplicativo lê o aviso da mensagem no seu celular.",
                 "• 2) Uma primeira análise é feita no próprio aparelho. Se não houver nenhum sinal de risco, a mensagem não sai do celular.",
-                "• 3) Se houver sinais de risco, o aplicativo esconde e-mails, telefones, CPF, links e chaves Pix no texto. Os endereços dos links são separados do texto e enviados à parte, só para verificar se o site é perigoso.",
+                "• 3) Se houver sinais de risco, o aplicativo esconde e-mails, telefones, CPF, RG, cartões, agência e conta, CEP, links e chaves Pix no texto. Os endereços dos links são separados do texto e enviados à parte, só para verificar se o site é perigoso.",
                 "• 4) O texto protegido é enviado, por conexão segura (HTTPS), ao servidor de análise, que usa inteligência artificial para classificar a mensagem como segura, suspeita ou possível golpe e devolve o resultado.",
                 "• 5) Se o servidor não responder, a análise é feita só no celular.",
                 "• 6) O aplicativo mostra o aviso, conforme as opções que você escolheu.",
@@ -218,7 +218,7 @@ object TextosLegais {
             "9. Como protegemos seus dados",
             listOf(
                 "• A primeira análise é feita no celular: mensagens sem sinal de risco não são enviadas.",
-                "• E-mails, telefones, CPF, links e chaves Pix são escondidos no texto antes do envio. Os endereços dos links seguem à parte, só para verificar o site.",
+                "• E-mails, telefones, CPF, RG, cartões, agência e conta, CEP, links e chaves Pix são escondidos no texto antes do envio. Os endereços dos links seguem à parte, só para verificar o site.",
                 "• O envio usa conexão segura (HTTPS) e o aplicativo bloqueia conexões sem criptografia.",
                 "• O conteúdo das mensagens não é gravado no celular.",
                 "• O histórico de alertas e os contatos de confiança ficam só no celular e não entram no backup na nuvem.",

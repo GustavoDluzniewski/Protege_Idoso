@@ -197,7 +197,7 @@ private fun CartaoDeResumoDoAceite() {
     val pontos = listOf(
         "Lemos apenas os avisos de mensagens do WhatsApp, para procurar sinais de golpe.",
         "Mensagens sem sinal de risco ficam no seu celular.",
-        "Mensagens com sinal de risco vão para análise, com e-mails, telefones, CPF, links e chaves Pix escondidos no texto. O endereço dos links vai à parte, só para verificar o site.",
+        "Mensagens com sinal de risco vão para análise, com e-mails, telefones, CPF, RG, cartões, agência e conta, CEP, links e chaves Pix escondidos no texto. O endereço dos links vai à parte, só para verificar o site.",
         "Não respondemos, não apagamos e não guardamos suas mensagens.",
         "Você pode revogar o consentimento quando quiser, na tela “Privacidade e segurança”."
     )
