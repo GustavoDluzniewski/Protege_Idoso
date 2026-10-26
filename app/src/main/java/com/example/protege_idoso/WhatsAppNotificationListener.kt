@@ -23,8 +23,6 @@ import com.example.protege_idoso.instituicoes.TipoCanal
 class WhatsAppNotificationListener : NotificationListenerService() {
     private var ultimaMensagemAnalisada = ""
     private var ultimoHorarioAnalise = 0L
-
-    // Mensagem que passou pelo filtro local e espera a análise com IA.
     private data class Pendente(
         val mensagem: String,
         val urls: List<String>,
@@ -34,9 +32,6 @@ class WhatsAppNotificationListener : NotificationListenerService() {
     )
 
     private val escopo = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    // Fila de análises: as mensagens são analisadas uma de cada vez, em ordem,
-    // em vez de serem descartadas enquanto outra está em análise.
     private val fila = Channel<Pendente>(
         capacity = 20,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -96,8 +91,6 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             null
         }
     }
-
-    // "3 novas mensagens", "5 mensagens de 2 conversas": resumo, não conteúdo.
     private fun ehResumoDeMensagens(texto: String): Boolean =
         Regex("""^\d+ (novas? )?mensage(m|ns)\b""", RegexOption.IGNORE_CASE)
             .containsMatchIn(texto.trim())
@@ -120,10 +113,19 @@ class WhatsAppNotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
 
-        TrancoChecker.carregarLista(applicationContext)
-
         Log.d("ProtegeIdoso", "Serviço de notificações conectado!")
-        Log.d("ProtegeIdoso", "Lista Tranco carregada para consulta.")
+
+        escopo.launch {
+            try {
+                TrancoChecker.carregarLista(applicationContext)
+                Log.d("ProtegeIdoso", "Lista Tranco carregada para consulta.")
+            } catch (e: Exception) {
+                Log.e(
+                    "ProtegeIdoso",
+                    "Não foi possível carregar a lista Tranco: ${e.javaClass.simpleName}"
+                )
+            }
+        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -157,9 +159,6 @@ class WhatsAppNotificationListener : NotificationListenerService() {
 
         val extras = sbn.notification.extras
 
-        // Em conversas, o WhatsApp manda as mensagens numa lista (MessagingStyle).
-        // Quando várias chegam juntas, "android.text" vira só um resumo
-        // ("3 novas mensagens"), então a última mensagem da lista é a que interessa.
         @Suppress("DEPRECATION")
         val ultimaDaConversa = extras.getParcelableArray("android.messages")
             ?.lastOrNull() as? Bundle
@@ -178,7 +177,6 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         val textoGrande =
             extras.getCharSequence("android.bigText")?.toString() ?: ""
 
-        // Estilo caixa de entrada: uma linha por mensagem.
         val ultimaLinha = extras.getCharSequenceArray("android.textLines")
             ?.lastOrNull()?.toString() ?: ""
 
@@ -208,7 +206,6 @@ class WhatsAppNotificationListener : NotificationListenerService() {
             .take(5)
             .toList()
 
-        // Basta um link fora do ranking para contar como sinal de risco.
         val dominioForaDoRanking = urlsEncontradas.any { url ->
             TrancoChecker.consultarUrl(url) == false
         }
@@ -270,11 +267,12 @@ class WhatsAppNotificationListener : NotificationListenerService() {
         }
 
         val urlsParaBackend = urlsEncontradas.map { url ->
-            if (url.startsWith("www.", ignoreCase = true)) {
+            val completa = if (url.startsWith("www.", ignoreCase = true)) {
                 "https://$url"
             } else {
                 url
             }
+            SanitizationService.sanitizarUrl(completa)
         }
 
         fila.trySend(
@@ -305,8 +303,6 @@ class WhatsAppNotificationListener : NotificationListenerService() {
                     dominioForaDoRanking = item.dominioForaDoRanking
                 )
 
-            // A IA não pode rebaixar para "seguro" um golpe claro do filtro local.
-            // Protege contra mensagens escritas para enganar a IA.
             val resultadoFinal =
                 if (item.resultadoLocal.nivel == RiskLevel.POSSIVEL_GOLPE &&
                     resultadoIA.nivel == RiskLevel.SEGURO
