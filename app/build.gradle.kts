@@ -31,6 +31,13 @@ android {
 
         testInstrumentationRunner =
             "androidx.test.runner.AndroidJUnitRunner"
+
+        // Endereço do servidor de análise. Defina URL_SERVIDOR no local.properties.
+        val urlServidor = localProperties.getProperty(
+            "URL_SERVIDOR",
+            "https://wooden-lyrics-ministries-different.trycloudflare.com"
+        ).trimEnd('/')
+        buildConfigField("String", "URL_SERVIDOR", "\"$urlServidor\"")
     }
 
     buildTypes {
