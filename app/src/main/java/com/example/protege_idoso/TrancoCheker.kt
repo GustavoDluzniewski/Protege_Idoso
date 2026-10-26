@@ -29,20 +29,53 @@ object TrancoChecker {
         carregado = true
     }
 
-    fun dominioEstaNoRanking(dominio: String): Boolean {
-        val dominioNormalizado = dominio
-            .trim()
-            .lowercase()
-            .removePrefix("https://")
-            .removePrefix("http://")
-            .removePrefix("www.")
-            .substringBefore("/")
-            .substringBefore(":")
-            .substringBefore("?")
-            .substringBefore("#")
-            .trimEnd('.')
+    // Sites famosos onde qualquer pessoa publica uma página ou encurta um link.
+    // Estar no ranking não diz nada sobre quem criou o link, então contam como desconhecidos.
+    private val hospedagemAberta = setOf(
+        "bit.ly", "tinyurl.com", "goo.gl", "is.gd", "cutt.ly", "t.co",
+        "forms.gle", "linktr.ee",
+        "sites.google.com", "docs.google.com",
+        "blogspot.com", "github.io", "wixsite.com", "weebly.com",
+        "web.app", "firebaseapp.com", "vercel.app", "netlify.app",
+        "pages.dev", "herokuapp.com", "000webhostapp.com", "glitch.me",
+        "trycloudflare.com", "ngrok.io", "ngrok-free.app"
+    )
 
-        return dominios.contains(dominioNormalizado)
+    private fun normalizar(dominio: String): String = dominio
+        .trim()
+        .lowercase()
+        .removePrefix("https://")
+        .removePrefix("http://")
+        .removePrefix("www.")
+        .substringBefore("/")
+        .substringBefore(":")
+        .substringBefore("?")
+        .substringBefore("#")
+        .trimEnd('.')
+
+    fun ehHospedagemAberta(dominio: String): Boolean {
+        val normalizado = normalizar(dominio)
+
+        return hospedagemAberta.any {
+            normalizado == it || normalizado.endsWith(".$it")
+        }
+    }
+
+    /**
+     * Procura o domínio e, se não achar, os domínios "pais":
+     * login.nubank.com.br -> nubank.com.br -> com.br.
+     */
+    fun dominioEstaNoRanking(dominio: String): Boolean {
+        var atual = normalizar(dominio)
+
+        if (ehHospedagemAberta(atual)) return false
+
+        while (atual.contains('.')) {
+            if (dominios.contains(atual)) return true
+            atual = atual.substringAfter('.')
+        }
+
+        return false
     }
 
 

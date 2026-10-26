@@ -106,4 +106,28 @@ class TrancoCheckerInstrumentedTest {
 
         assertEquals("google.com", dominio)
     }
+
+    @Test
+    fun deveReconhecerSubdominioDeSiteDoRanking() {
+        TrancoChecker.carregarLista(
+            InstrumentationRegistry.getInstrumentation().targetContext
+        )
+
+        assertEquals(
+            true,
+            TrancoChecker.consultarUrl("https://login.nubank.com.br/entrar")
+        )
+    }
+
+    @Test
+    fun siteDeHospedagemAbertaNaoContaComoConhecido() {
+        TrancoChecker.carregarLista(
+            InstrumentationRegistry.getInstrumentation().targetContext
+        )
+
+        assertEquals(
+            false,
+            TrancoChecker.consultarUrl("https://premio-caixa.blogspot.com/resgate")
+        )
+    }
 }
