@@ -9,12 +9,6 @@ data class PerguntaQuiz(
 ) {
     val respostaCorreta: String get() = alternativas[indiceCorreto]
 }
-
-/**
- * Situações do dia a dia para o desafio diário. Cada uma tem duas alternativas
- * e só uma é a atitude segura. O total precisa ser múltiplo de
- * [RegrasDoQuiz.PERGUNTAS_POR_RODADA] para as rodadas fecharem certinho.
- */
 object BancoDePerguntas {
 
     val todas: List<PerguntaQuiz> = listOf(

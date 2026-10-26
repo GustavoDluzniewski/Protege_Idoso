@@ -54,7 +54,6 @@ object LocalRiskAnalyzer {
         val temPix = texto.contains("pix")
         val temSenha = texto.contains("senha")
         val temCodigo = texto.contains("código") || texto.contains("codigo")
-        // "parabéns" e "ganhou" sozinhos aparecem em aniversários e conquistas.
         val temPremio = texto.contains("prêmio") ||
                 texto.contains("premio") ||
                 texto.contains("sorteio") ||
@@ -62,7 +61,6 @@ object LocalRiskAnalyzer {
                 texto.contains("você ganhou") ||
                 texto.contains("voce ganhou")
 
-        // "agora" sozinho é comum demais ("chego agora"): só conta junto de um pedido.
         val temUrgencia = texto.contains("urgente") ||
                 texto.contains("responda agora") ||
                 texto.contains("pague agora") ||
@@ -76,7 +74,6 @@ object LocalRiskAnalyzer {
                 texto.contains("suspenso") ||
                 texto.contains("suspensa")
 
-        // A sanitização roda antes e troca os links por [LINK].
         val temLink = texto.contains("[link]") ||
                 texto.contains("http") ||
                 texto.contains("www.") ||
@@ -102,7 +99,6 @@ object LocalRiskAnalyzer {
                 texto.contains("informe seu cartao") ||
                 texto.contains("digite seu cartao")
 
-        // "banco", "caixa" e "gov" sozinhos aparecem em conversas normais.
         val imitaInstituicao = texto.contains("seu banco") ||
                 texto.contains("banco do brasil") ||
                 texto.contains("banco central") ||

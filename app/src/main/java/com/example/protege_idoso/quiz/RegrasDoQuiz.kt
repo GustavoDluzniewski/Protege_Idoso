@@ -14,8 +14,6 @@ object RegrasDoQuiz {
     private const val LIMITE_DE_DIAS_COM_BONUS = 10
 
     val MARCOS_DE_SEQUENCIA = listOf(3, 7, 15, 30, 60, 100, 365)
-
-    /** Momento em que o próximo desafio é liberado. 0 quando nunca foi jogado. */
     fun proximaLiberacao(ultimaConclusao: Long): Long =
         if (ultimaConclusao <= 0L) 0L else ultimaConclusao + INTERVALO_ENTRE_RODADAS_MS
 
@@ -31,16 +29,12 @@ object RegrasDoQuiz {
                 BONUS_MAXIMO_DE_RAPIDEZ / TEMPO_POR_PERGUNTA_MS
         return PONTOS_POR_ACERTO + bonus.toInt()
     }
-
-    /** Dias seguidos: continua se o último desafio foi feito em até 48 horas. */
     fun novaSequencia(ultimaConclusao: Long, agora: Long, sequenciaAtual: Int): Int =
         if (ultimaConclusao > 0L && agora - ultimaConclusao <= PRAZO_PARA_MANTER_SEQUENCIA_MS) {
             sequenciaAtual + 1
         } else {
             1
         }
-
-    /** A sequência só vale enquanto o prazo de 48 horas não passou. */
     fun sequenciaVigente(ultimaConclusao: Long, agora: Long, sequenciaSalva: Int): Int =
         if (ultimaConclusao > 0L && agora - ultimaConclusao <= PRAZO_PARA_MANTER_SEQUENCIA_MS) {
             sequenciaSalva
@@ -50,8 +44,6 @@ object RegrasDoQuiz {
 
     fun prazoDaSequencia(ultimaConclusao: Long): Long =
         ultimaConclusao + PRAZO_PARA_MANTER_SEQUENCIA_MS
-
-    /** A partir do 2º dia seguido, cada desafio vale 10 pontos extras por dia, até 100. */
     fun bonusDeSequencia(sequencia: Int): Int =
         if (sequencia <= 1) 0 else BONUS_POR_DIA_SEGUIDO * sequencia.coerceAtMost(LIMITE_DE_DIAS_COM_BONUS)
 
@@ -69,11 +61,6 @@ object RegrasDoQuiz {
         365 -> "Um ano inteiro! Que orgulho!"
         else -> "$sequencia dias seguidos!"
     }
-
-    /**
-     * Escolhe as perguntas da rodada. Passa por todo o banco sem repetir e,
-     * quando acaba, recomeça numa ordem nova.
-     */
     fun perguntasDaRodada(
         numeroDaRodada: Int,
         banco: List<PerguntaQuiz> = BancoDePerguntas.todas
@@ -94,8 +81,6 @@ object RegrasDoQuiz {
         acertosTotais >= 5 -> "Aprendiz cuidadoso"
         else -> "Iniciante"
     }
-
-    /** Formato 05:12:30 para a contagem até o próximo desafio. */
     fun formatarContagem(milissegundos: Long): String {
         val totalSegundos = (milissegundos.coerceAtLeast(0L) + 999L) / 1000L
         val horas = totalSegundos / 3600
@@ -103,14 +88,10 @@ object RegrasDoQuiz {
         val segundos = totalSegundos % 60
         return "%02d:%02d:%02d".format(horas, minutos, segundos)
     }
-
-    /** Formato 3:59 para o cronômetro da pergunta. */
     fun formatarCronometro(milissegundos: Long): String {
         val totalSegundos = (milissegundos.coerceAtLeast(0L) + 999L) / 1000L
         return "%d:%02d".format(totalSegundos / 60, totalSegundos % 60)
     }
-
-    /** Leitura em voz alta: "3 minutos e 20 segundos". */
     fun descreverTempo(milissegundos: Long): String {
         val totalSegundos = (milissegundos.coerceAtLeast(0L) + 999L) / 1000L
         val minutos = totalSegundos / 60
