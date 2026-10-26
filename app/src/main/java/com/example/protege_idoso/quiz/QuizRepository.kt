@@ -11,11 +11,6 @@ data class ResultadoDaResposta(
     val sequencia: Int = 0,
     val bonusDeSequencia: Int = 0
 )
-
-/**
- * Guarda o andamento do desafio diário no celular. O início de cada pergunta
- * fica salvo, então o cronômetro continua contando mesmo se o aplicativo for fechado.
- */
 class QuizRepository(context: Context) {
 
     private val preferencias = context.getSharedPreferences(
@@ -29,8 +24,6 @@ class QuizRepository(context: Context) {
     val acertosTotais: Int get() = preferencias.getInt(CHAVE_ACERTOS_TOTAIS, 0)
     val pontosTotais: Int get() = preferencias.getInt(CHAVE_PONTOS_TOTAIS, 0)
     val melhorSequencia: Int get() = preferencias.getInt(CHAVE_MELHOR_SEQUENCIA, 0)
-
-    /** Dias (contados desde 1970) em que um desafio foi concluído, dos últimos 60 dias. */
     val diasJogados: Set<Long>
         get() = preferencias.getString(CHAVE_DIAS_JOGADOS, "")
             .orEmpty()
@@ -52,9 +45,6 @@ class QuizRepository(context: Context) {
     fun estaLiberado(agora: Long = System.currentTimeMillis()): Boolean =
         rodadaEmAndamento || RegrasDoQuiz.estaLiberado(agora, ultimaConclusao)
 
-    fun perguntasDaRodadaAtual(): List<PerguntaQuiz> =
-        RegrasDoQuiz.perguntasDaRodada(rodadasConcluidas)
-
     fun iniciarRodada(agora: Long) {
         preferencias.edit()
             .putBoolean(CHAVE_EM_ANDAMENTO, true)
@@ -64,8 +54,6 @@ class QuizRepository(context: Context) {
             .putInt(CHAVE_PONTOS_RODADA, 0)
             .apply()
     }
-
-    /** Começa a contar o tempo da pergunta atual, se ainda não começou. */
     fun iniciarPerguntaAtual(agora: Long) {
         if (inicioPerguntaAtual <= 0L) {
             preferencias.edit().putLong(CHAVE_INICIO_PERGUNTA, agora).apply()

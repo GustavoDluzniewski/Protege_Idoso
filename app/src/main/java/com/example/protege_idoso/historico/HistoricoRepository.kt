@@ -19,8 +19,7 @@ class HistoricoRepository(context: Context) {
             put(Analises.ORIGEM, analise.origem)
             put(Analises.STATUS, analise.status.name)
             put(Analises.ATUALIZADO_EM, analise.atualizadoEm)
-            if (analise.instituicao != null) put(Analises.INSTITUICAO, analise.instituicao)
-            else putNull(Analises.INSTITUICAO)
+            put(Analises.INSTITUICAO, analise.instituicao)
         }
         val id = banco.writableDatabase.insert(Analises.TABELA, null, valores)
         apagarExcedentes()

@@ -34,22 +34,8 @@ class Preferencias(context: Context) {
         }
 
 
-    var versaoTermosAceita: Int
+    val versaoTermosAceita: Int
         get() = preferencias.getInt("versao_termos_aceita", 0)
-        set(valor) {
-            preferencias.edit()
-                .putInt("versao_termos_aceita", valor)
-                .apply()
-        }
-
-
-    var dataDoAceite: Long
-        get() = preferencias.getLong("data_do_aceite", 0L)
-        set(valor) {
-            preferencias.edit()
-                .putLong("data_do_aceite", valor)
-                .apply()
-        }
 
 
     fun aceitouTermosAtuais(): Boolean {

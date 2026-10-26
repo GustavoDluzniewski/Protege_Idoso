@@ -12,7 +12,6 @@ val AzulTinta = Color(0xFF0E2A47)
 val AzulCinza = Color(0xFF4A6280)
 val AzulContorno = Color(0xFFD3E2F4)
 
-val LaranjaAlerta = Color(0xFFB45309)
 val LaranjaAlertaFundo = Color(0xFFFFF1DB)
 val LaranjaAlertaTexto = Color(0xFF7A4300)
 val VermelhoPerigo = Color(0xFFC62828)

@@ -3,7 +3,6 @@ package com.example.protege_idoso
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
-import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -34,7 +33,6 @@ object IARiskAnalyzer {
     private val gson = Gson()
 
     private data class RespostaRegistro(
-        val instalacao_id: Long?,
         val token: String?
     )
 
@@ -136,7 +134,6 @@ object IARiskAnalyzer {
 
             val requisicao = Request.Builder()
                 .url(URL_ANALISAR)
-                .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer $token")
                 .post(body)
                 .build()
@@ -170,14 +167,10 @@ object IARiskAnalyzer {
     private fun converterRespostaParaRiskResult(
         respostaTexto: String
     ): RiskResult {
-        val json = JsonParser.parseString(
-            respostaTexto.trim()
-        ).asJsonObject
-
         val resposta = gson.fromJson(
-            json,
+            respostaTexto.trim(),
             RespostaServidor::class.java
-        )
+        ) ?: throw IOException("Resposta vazia do backend")
 
         val classificacao = resposta.classificacao
             ?: throw IOException("Classificação não encontrada")
@@ -196,9 +189,6 @@ object IARiskAnalyzer {
 
             else -> throw IOException("Classificação inválida")
         }
-
-        // O texto da IA aparece no aviso e vai para o histórico: esconde
-        // qualquer dado pessoal que ela tenha copiado da mensagem e limita o tamanho.
         return RiskResult(
             nivel = nivel,
             explicacao = limparTextoDaIA(explicacao),

@@ -238,7 +238,7 @@ class InstituicoesRepository(context: Context) {
     private fun inserirInstituicao(db: SQLiteDatabase, codigo: String?, nome: String): Long {
         val agora = System.currentTimeMillis()
         val valores = ContentValues().apply {
-            if (codigo != null) put(Instituicoes.CODIGO, codigo) else putNull(Instituicoes.CODIGO)
+            put(Instituicoes.CODIGO, codigo)
             put(Instituicoes.NOME, nome)
             put(Instituicoes.CRIADO_EM, agora)
             put(Instituicoes.ATUALIZADO_EM, agora)

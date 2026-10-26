@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -48,27 +47,13 @@ class MainActivity : ComponentActivity() {
     private var desafioEmAndamento by mutableStateOf(false)
 
     private fun abrirDisqueDenuncia(context: Context) {
-        val numero = "556932168940"
-
         val mensagem = """
         Olá. Estou recebendo mensagens que podem ser uma tentativa de golpe.
 
         Gostaria de orientações sobre como proceder e, se necessário, realizar uma denúncia.
     """.trimIndent()
 
-        val url = "https://wa.me/$numero?text=${Uri.encode(mensagem)}"
-
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-
-        try {
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Não foi possível abrir o WhatsApp.",
-                Toast.LENGTH_LONG
-            ).show()
-        }
+        DisqueDenuncia.abrir(context, mensagem)
     }
 
     private fun atualizarContadores() {

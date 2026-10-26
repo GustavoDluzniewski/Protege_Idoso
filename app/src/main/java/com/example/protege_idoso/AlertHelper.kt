@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
-import android.os.Build
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.StyleSpan
@@ -90,7 +89,7 @@ object AlertHelper {
     ) {
         criarCanais(context)
 
-        val intent = intentAoTocar(context, idAnalise);
+        val intent = intentAoTocar(context, idAnalise)
 
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -112,9 +111,6 @@ object AlertHelper {
             .setPublicVersion(
                 versaoPublica(context, CANAL_SUSPEITO, TITULO_SUSPEITO, COR_SUSPEITO)
             )
-            .setVibrate(PADRAO_VIBRACAO_SUSPEITO)
-
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
@@ -157,8 +153,6 @@ object AlertHelper {
             .setPublicVersion(
                 versaoPublica(context, CANAL_GOLPE, TITULO_GOLPE, COR_GOLPE)
             )
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setVibrate(PADRAO_VIBRACAO_GOLPE)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
@@ -173,35 +167,31 @@ object AlertHelper {
     private val PADRAO_VIBRACAO_GOLPE = longArrayOf(0, 600, 250, 600, 250, 600)
 
     private fun criarCanais(context: Context) {
+        val manager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val canalSuspeito = NotificationChannel(
+            CANAL_SUSPEITO,
+            "Mensagem suspeita",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        canalSuspeito.description =
+            "Avisos quando uma mensagem parece estranha"
+        canalSuspeito.enableVibration(true)
+        canalSuspeito.vibrationPattern = PADRAO_VIBRACAO_SUSPEITO
 
-            val manager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val canalGolpe = NotificationChannel(
+            CANAL_GOLPE,
+            "Possível golpe",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        canalGolpe.description =
+            "Avisos fortes quando há grande chance de golpe"
+        canalGolpe.enableVibration(true)
+        canalGolpe.vibrationPattern = PADRAO_VIBRACAO_GOLPE
 
-            val canalSuspeito = NotificationChannel(
-                CANAL_SUSPEITO,
-                "Mensagem suspeita",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            canalSuspeito.description =
-                "Avisos quando uma mensagem parece estranha"
-            canalSuspeito.enableVibration(true)
-            canalSuspeito.vibrationPattern = PADRAO_VIBRACAO_SUSPEITO
-
-            val canalGolpe = NotificationChannel(
-                CANAL_GOLPE,
-                "Possível golpe",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            canalGolpe.description =
-                "Avisos fortes quando há grande chance de golpe"
-            canalGolpe.enableVibration(true)
-            canalGolpe.vibrationPattern = PADRAO_VIBRACAO_GOLPE
-
-            manager.createNotificationChannel(canalSuspeito)
-            manager.createNotificationChannel(canalGolpe)
-            manager.deleteNotificationChannel(CANAL_ANTIGO)
-        }
+        manager.createNotificationChannel(canalSuspeito)
+        manager.createNotificationChannel(canalGolpe)
+        manager.deleteNotificationChannel(CANAL_ANTIGO)
     }
 }

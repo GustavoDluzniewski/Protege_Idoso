@@ -1,9 +1,6 @@
 package com.example.protege_idoso
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -54,8 +51,6 @@ import kotlinx.coroutines.withContext
 
 class InstrucoesActivity : ComponentActivity() {
     private fun abrirDisqueDenuncia() {
-        val numero = "556932168940"
-
         val mensagem = """
             Olá. Estou recebendo mensagens que podem ser uma tentativa de golpe.
             
@@ -64,22 +59,7 @@ class InstrucoesActivity : ComponentActivity() {
             Tenho as mensagens recebidas e outras informações que podem ajudar na denúncia.
         """.trimIndent()
 
-        val url = "https://wa.me/$numero?text=${Uri.encode(mensagem)}"
-
-        val intent = Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse(url)
-        )
-
-        try {
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(
-                this,
-                "Não foi possível abrir o WhatsApp.",
-                Toast.LENGTH_LONG
-            ).show()
-        }
+        DisqueDenuncia.abrir(this, mensagem)
     }
 
     private var contatos by mutableStateOf<List<ContatoConfianca>>(emptyList())
