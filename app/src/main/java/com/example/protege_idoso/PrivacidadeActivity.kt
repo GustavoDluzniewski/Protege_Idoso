@@ -142,6 +142,7 @@ class PrivacidadeActivity : ComponentActivity() {
                 .limparTudo()
             com.example.protege_idoso.quiz.QuizRepository(applicationContext)
                 .apagarTudo()
+            TokenStorage.apagarToken(applicationContext)
         } catch (e: Exception) {
             android.util.Log.e(
                 "ProtegeIdoso",
@@ -439,7 +440,7 @@ private fun CartaoDePassosDaMensagem() {
     val passos = listOf(
         "Uma mensagem chega no WhatsApp e o aplicativo lê o aviso que aparece no celular.",
         "A primeira análise é feita no próprio celular. Mensagens sem nenhum sinal de risco não saem do aparelho.",
-        "Se houver sinais de risco, o aplicativo esconde e-mails, telefones, CPF, links e chaves Pix antes de enviar o texto.",
+        "Se houver sinais de risco, o aplicativo esconde e-mails, telefones, CPF, links e chaves Pix antes de enviar o texto. O endereço dos links vai à parte, só para verificar se o site é perigoso.",
         "O texto protegido vai por conexão segura (HTTPS) para a análise com inteligência artificial. Se ela não responder, a análise é feita só no celular.",
         "Você recebe o aviso, de acordo com as opções da tela inicial em “Quando devo avisar você?”."
     )
@@ -542,7 +543,8 @@ private fun CartaoDeLimites() {
 
                 Text(
                     text = "O aplicativo esconde automaticamente e-mails, telefones, " +
-                            "CPF, links e chaves Pix. Outras informações escritas na " +
+                            "CPF, links e chaves Pix do texto. O endereço dos links vai à parte, " +
+                            "só para verificar o site. Outras informações escritas na " +
                             "mensagem, como nomes ou endereços, podem seguir no texto " +
                             "enviado para análise.",
                     style = MaterialTheme.typography.bodyLarge

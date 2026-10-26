@@ -963,7 +963,8 @@ private fun NotaDePrivacidade(
 
             Text(
                 text = "Antes de analisar uma mensagem com inteligência artificial, " +
-                        "o aplicativo esconde e-mails, telefones, CPF, links e chaves Pix.",
+                        "o aplicativo esconde e-mails, telefones, CPF, links e chaves Pix." +
+                        " O endereço dos links vai à parte, só para verificar o site.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
