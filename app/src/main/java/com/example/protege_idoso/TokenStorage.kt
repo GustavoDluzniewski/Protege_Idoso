@@ -1,6 +1,8 @@
 package com.example.protege_idoso
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -9,7 +11,7 @@ object TokenStorage {
     private const val NOME_ARQUIVO = "protege_idoso_secure"
     private const val CHAVE_TOKEN = "token_instalacao"
 
-    private fun preferencias(context: Context) =
+    private fun criarPreferencias(context: Context): SharedPreferences =
         EncryptedSharedPreferences.create(
             context,
             NOME_ARQUIVO,
@@ -20,8 +22,26 @@ object TokenStorage {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
 
+    @Synchronized
+    private fun preferencias(context: Context): SharedPreferences =
+        try {
+            criarPreferencias(context)
+        } catch (e: Exception) {
+            Log.w(
+                "ProtegeIdoso",
+                "Armazenamento do token ilegível (${e.javaClass.simpleName}). Recriando."
+            )
+            context.deleteSharedPreferences(NOME_ARQUIVO)
+            criarPreferencias(context)
+        }
+
     fun obterToken(context: Context): String? {
-        return preferencias(context).getString(CHAVE_TOKEN, null)
+        return try {
+            preferencias(context).getString(CHAVE_TOKEN, null)
+        } catch (e: Exception) {
+            context.deleteSharedPreferences(NOME_ARQUIVO)
+            null
+        }
     }
 
     fun salvarToken(context: Context, token: String) {
