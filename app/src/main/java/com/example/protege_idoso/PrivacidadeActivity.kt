@@ -44,6 +44,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.protege_idoso.contatos.ContatosRepository
+import com.example.protege_idoso.historico.HistoricoRepository
+import com.example.protege_idoso.instituicoes.InstituicoesRepository
+import com.example.protege_idoso.quiz.QuizRepository
 import com.example.protege_idoso.ui.BotaoSecundario
 import com.example.protege_idoso.ui.CabecalhoDeTela
 import com.example.protege_idoso.ui.CartaoBranco
@@ -53,11 +58,16 @@ import com.example.protege_idoso.ui.DivisorSuave
 import com.example.protege_idoso.ui.TituloDeSecao
 import com.example.protege_idoso.ui.theme.ProtegeTema
 import com.example.protege_idoso.ui.theme.Protege_IdosoTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PrivacidadeActivity : ComponentActivity() {
 
     private var acessoNotificacoes by mutableStateOf(false)
     private var avisosPermitidos by mutableStateOf(false)
+
+    private var revogando = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -131,32 +141,45 @@ class PrivacidadeActivity : ComponentActivity() {
     }
 
     private fun revogarConsentimento() {
-        Preferencias(this).revogarAceite()
+        if (revogando) return
+        revogando = true
 
-        try {
-            com.example.protege_idoso.historico.HistoricoRepository(applicationContext)
-                .limparTudo()
-            com.example.protege_idoso.contatos.ContatosRepository(applicationContext)
-                .limparTudo()
-            com.example.protege_idoso.instituicoes.InstituicoesRepository(applicationContext)
-                .limparTudo()
-            com.example.protege_idoso.quiz.QuizRepository(applicationContext)
-                .apagarTudo()
-            TokenStorage.apagarToken(applicationContext)
-        } catch (e: Exception) {
-            android.util.Log.e(
-                "ProtegeIdoso",
-                "Não foi possível apagar os dados locais: ${e.javaClass.simpleName}"
-            )
+        Preferencias(applicationContext).revogarAceite()
+
+        lifecycleScope.launch {
+            val apagouTudo = withContext(Dispatchers.IO) {
+                try {
+                    HistoricoRepository(applicationContext).limparTudo()
+                    ContatosRepository(applicationContext).limparTudo()
+                    InstituicoesRepository(applicationContext).limparTudo()
+                    QuizRepository(applicationContext).apagarTudo()
+                    TokenStorage.apagarToken(applicationContext)
+                    true
+                } catch (e: Exception) {
+                    android.util.Log.e(
+                        "ProtegeIdoso",
+                        "Não foi possível apagar os dados locais: ${e.javaClass.simpleName}"
+                    )
+                    false
+                }
+            }
+
+            NotificationManagerCompat.from(applicationContext).cancelAll()
+
+            Toast.makeText(
+                applicationContext,
+                if (apagouTudo) {
+                    "Consentimento revogado."
+                } else {
+                    "Consentimento revogado, mas alguns dados não puderam ser apagados. " +
+                            "Para apagar tudo, limpe os dados do aplicativo nas " +
+                            "configurações do celular."
+                },
+                Toast.LENGTH_LONG
+            ).show()
+
+            finish()
         }
-
-        Toast.makeText(
-            this,
-            "Consentimento revogado.",
-            Toast.LENGTH_LONG
-        ).show()
-
-        finish()
     }
 
     private fun abrirConfiguracao(intent: Intent) {
@@ -440,7 +463,7 @@ private fun CartaoDePassosDaMensagem() {
     val passos = listOf(
         "Uma mensagem chega no WhatsApp e o aplicativo lê o aviso que aparece no celular.",
         "A primeira análise é feita no próprio celular. Mensagens sem nenhum sinal de risco não saem do aparelho.",
-        "Se houver sinais de risco, o aplicativo esconde e-mails, telefones, CPF, links e chaves Pix antes de enviar o texto. O endereço dos links vai à parte, só para verificar se o site é perigoso.",
+        "Se houver sinais de risco, o aplicativo esconde e-mails, telefones, CPF, RG, cartões, agência e conta, CEP, links e chaves Pix antes de enviar o texto. O endereço dos links vai à parte, só para verificar se o site é perigoso.",
         "O texto protegido vai por conexão segura (HTTPS) para a análise com inteligência artificial. Se ela não responder, a análise é feita só no celular.",
         "Você recebe o aviso, de acordo com as opções da tela inicial em “Quando devo avisar você?”."
     )
@@ -543,7 +566,8 @@ private fun CartaoDeLimites() {
 
                 Text(
                     text = "O aplicativo esconde automaticamente e-mails, telefones, " +
-                            "CPF, links e chaves Pix do texto. O endereço dos links vai à parte, " +
+                            "CPF, RG, cartões, agência e conta, CEP, links e chaves Pix " +
+                            "do texto. O endereço dos links vai à parte, " +
                             "só para verificar o site. Outras informações escritas na " +
                             "mensagem, como nomes ou endereços, podem seguir no texto " +
                             "enviado para análise.",
