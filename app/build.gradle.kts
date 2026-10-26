@@ -32,17 +32,19 @@ android {
         testInstrumentationRunner =
             "androidx.test.runner.AndroidJUnitRunner"
 
-        // Endereço do servidor de análise. Defina URL_SERVIDOR no local.properties.
-        val urlServidor = localProperties.getProperty(
-            "URL_SERVIDOR",
-            "https://wooden-lyrics-ministries-different.trycloudflare.com"
-        ).trimEnd('/')
+        val urlServidor = localProperties.getProperty("URL_SERVIDOR")
+            ?.trim()
+            ?.trimEnd('/')
+            ?.takeIf { it.startsWith("https://") }
+            ?: throw GradleException(
+                "Defina URL_SERVIDOR=https://... no arquivo local.properties."
+            )
         buildConfigField("String", "URL_SERVIDOR", "\"$urlServidor\"")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -70,7 +72,6 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
