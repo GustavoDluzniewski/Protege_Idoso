@@ -16,13 +16,14 @@ import java.util.concurrent.TimeUnit
 object IARiskAnalyzer {
     private const val TAG = "ProtegeIdoso"
 
-    private const val URL_BASE =
-        "https://wooden-lyrics-ministries-different.trycloudflare.com"
+    private const val TAMANHO_MAXIMO_TEXTO = 300
 
-    private const val URL_REGISTRAR =
+    private val URL_BASE = BuildConfig.URL_SERVIDOR
+
+    private val URL_REGISTRAR =
         "$URL_BASE/instalacoes/registrar"
 
-    private const val URL_ANALISAR =
+    private val URL_ANALISAR =
         "$URL_BASE/analisar"
 
     private val client = OkHttpClient.Builder()
@@ -46,7 +47,8 @@ object IARiskAnalyzer {
     suspend fun analisarMensagem(
         context: Context,
         mensagem: String,
-        urls: List<String> = emptyList()
+        urls: List<String> = emptyList(),
+        dominioForaDoRanking: Boolean = false
     ): RiskResult {
         return withContext(Dispatchers.IO) {
             try {
@@ -67,7 +69,10 @@ object IARiskAnalyzer {
                             "Usando análise local."
                 )
 
-                LocalRiskAnalyzer.analisarMensagem(mensagem)
+                LocalRiskAnalyzer.analisarMensagem(
+                    mensagem = mensagem,
+                    dominioForaDoRanking = dominioForaDoRanking
+                )
             }
         }
     }
@@ -192,10 +197,22 @@ object IARiskAnalyzer {
             else -> throw IOException("Classificação inválida")
         }
 
+        // O texto da IA aparece no aviso e vai para o histórico: esconde
+        // qualquer dado pessoal que ela tenha copiado da mensagem e limita o tamanho.
         return RiskResult(
             nivel = nivel,
-            explicacao = explicacao,
-            orientacao = orientacao
+            explicacao = limparTextoDaIA(explicacao),
+            orientacao = limparTextoDaIA(orientacao)
         )
+    }
+
+    private fun limparTextoDaIA(texto: String): String {
+        val limpo = SanitizationService.sanitizeMessage(texto.trim())
+
+        return if (limpo.length <= TAMANHO_MAXIMO_TEXTO) {
+            limpo
+        } else {
+            limpo.take(TAMANHO_MAXIMO_TEXTO).trimEnd() + "…"
+        }
     }
 }
