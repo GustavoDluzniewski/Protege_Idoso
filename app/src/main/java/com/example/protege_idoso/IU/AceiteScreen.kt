@@ -104,8 +104,10 @@ fun AceiteScreen(
                         marcado = aceitouPrivacidade,
                         texto = "Li a Política de Privacidade e autorizo o tratamento dos meus " +
                                 "dados como descrito nela, inclusive o envio, para análise, do " +
-                                "texto protegido das mensagens que tiverem sinais de risco. " +
-                                "Esse texto pode ser tratado em outros países.",
+                                "texto protegido das mensagens que tiverem sinais de risco, mesmo que " +
+                                "contenha dados sensíveis, como de saúde ou religião. Esse texto " +
+                                "é tratado nos Estados Unidos (OpenAI e Cloudflare), e os links " +
+                                "são verificados nos Estados Unidos e na Suíça.",
                         onMudar = { aceitouPrivacidade = it }
                     )
                 }

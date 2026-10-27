@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
@@ -35,6 +36,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
@@ -77,6 +79,8 @@ import androidx.compose.ui.unit.dp
 import com.example.protege_idoso.contatos.AcoesDeContato
 import com.example.protege_idoso.contatos.ContatoConfianca
 import com.example.protege_idoso.contatos.ContatosRepository
+import com.example.protege_idoso.contatos.EscolherTelefoneDaAgenda
+import com.example.protege_idoso.contatos.LeitorDaAgenda
 import com.example.protege_idoso.contatos.ErrosDoContato
 import com.example.protege_idoso.contatos.ResultadoContato
 import com.example.protege_idoso.contatos.Telefone
@@ -563,6 +567,8 @@ private fun FormularioDeContato(
     onRemover: (() -> Unit)?
 ) {
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var nome by rememberSaveable(contato?.id) { mutableStateOf(contato?.nome.orEmpty()) }
     var telefone by rememberSaveable(contato?.id) {
@@ -573,6 +579,28 @@ private fun FormularioDeContato(
     var salvando by remember { mutableStateOf(false) }
 
     val telefoneNormalizado = Telefone.normalizar(telefone)
+
+    val escolherDaAgenda = rememberLauncherForActivityResult(EscolherTelefoneDaAgenda()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val escolhido = withContext(Dispatchers.IO) { LeitorDaAgenda.ler(context, uri) }
+            if (escolhido == null) {
+                Toast.makeText(context, "Não foi possível ler esse contato.", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            if (escolhido.nomeParaFormulario.isNotBlank()) {
+                nome = escolhido.nomeParaFormulario
+            }
+            telefone = escolhido.telefoneParaFormulario
+            erros = if (escolhido.telefoneNormalizado == null) {
+                ErrosDoContato(
+                    telefone = "Confira o número: ele precisa ter DDD, por exemplo (69) 99999-8888."
+                )
+            } else {
+                ErrosDoContato()
+            }
+        }
+    }
 
     fun salvar() {
         focusManager.clearFocus()
@@ -601,6 +629,24 @@ private fun FormularioDeContato(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
+        BotaoSecundario(
+            texto = "Escolher da agenda do celular",
+            icone = Icons.Filled.AccountBox,
+            onClick = {
+                try {
+                    escolherDaAgenda.launch(Unit)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Não foi possível abrir a agenda.", Toast.LENGTH_LONG).show()
+                }
+            }
+        )
+
+        Text(
+            text = "Ou escreva o nome e o telefone abaixo. Confira os dados antes de salvar.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
         OutlinedTextField(
             value = nome,
             onValueChange = {
@@ -738,7 +784,8 @@ private fun FormularioDeContato(
 
         Text(
             text = "Os contatos ficam guardados só neste celular. " +
-                    "O aplicativo não lê a sua agenda e não envia esses dados para lugar nenhum.",
+                    "Da agenda, o aplicativo recebe apenas a pessoa que você escolher, " +
+                    "e não envia esses dados para lugar nenhum.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

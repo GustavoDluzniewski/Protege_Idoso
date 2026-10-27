@@ -386,8 +386,9 @@ private fun CartaoDePermissoes(
             )
 
             Text(
-                text = "Os contatos de confiança são digitados por você e ficam só " +
-                        "neste celular. O aplicativo não lê a sua agenda.",
+                text = "Os contatos de confiança são digitados ou escolhidos por você e " +
+                        "ficam só neste celular. O aplicativo não lê a sua agenda: recebe " +
+                        "apenas a pessoa que você escolher.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -464,7 +465,7 @@ private fun CartaoDePassosDaMensagem() {
         "Uma mensagem chega no WhatsApp e o aplicativo lê o aviso que aparece no celular.",
         "A primeira análise é feita no próprio celular. Mensagens sem nenhum sinal de risco não saem do aparelho.",
         "Se houver sinais de risco, o aplicativo esconde e-mails, telefones, CPF, RG, cartões, agência e conta, CEP, links e chaves Pix antes de enviar o texto. O endereço dos links vai à parte, só para verificar se o site é perigoso.",
-        "O texto protegido vai por conexão segura (HTTPS) para a análise com inteligência artificial. Se ela não responder, a análise é feita só no celular.",
+        "O texto protegido vai por conexão segura (HTTPS) para a análise com inteligência artificial (OpenAI, nos Estados Unidos). Se ela não responder, a análise é feita só no celular.",
         "Você recebe o aviso, de acordo com as opções da tela inicial em “Quando devo avisar você?”."
     )
 

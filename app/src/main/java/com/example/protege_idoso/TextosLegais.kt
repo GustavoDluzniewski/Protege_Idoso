@@ -5,19 +5,16 @@ object DadosLegais {
 
     const val VERSAO = 2
 
-    const val DATA_ATUALIZACAO = "24 de outubro de 2026"
+    const val DATA_ATUALIZACAO = "27 de outubro de 2026"
 
 
     const val ROTULO_REVOGAR = "Revogar meu consentimento"
 
-    const val NOME_CONTROLADOR =
-        "ProtegeIdoso"
+    const val NOME_CONTROLADOR = "ProtegeIdoso, projeto acadêmico sem fins lucrativos desenvolvido por Gustavo Gomes Dluzniewski (Engenharia da Computação), Thalys Roberto Marques de Melo (Sistemas de Informação) e Guilherme Bastos Limoeiro (Sistemas de Informação), alunos da UNISAPIENS"
 
-    const val EMAIL_CONTATO =
-        "protegeidosoapp@gmail.com"
+    const val EMAIL_CONTATO = "protegeidosoapp@gmail.com"
 
-    const val RETENCAO_NO_SERVIDOR =
-        "o aplicativo não grava o conteúdo das mensagens no servidor."
+    const val RETENCAO_NO_SERVIDOR = "o aplicativo não grava o conteúdo das mensagens no servidor."
 }
 
 data class SecaoLegal(
@@ -143,11 +140,13 @@ object TextosLegais {
                 "• Endereços dos links da mensagem: enviados à parte, sem o resto do texto, apenas para verificar se o site é conhecido ou perigoso. Um link pode conter dados de quem o criou (por exemplo, um código de rastreio); por isso ele é usado só para essa verificação, e e-mails e CPF que aparecem dentro do link são retirados antes do envio.",
                 "• Suas escolhas no aplicativo: se a análise e cada tipo de aviso estão ligados.",
                 "• Registro do seu aceite: qual versão destes documentos você aceitou e quando. Fica somente no seu celular.",
-                "• Histórico de alertas: para cada aviso mostrado, o nível de risco, a explicação, a orientação, a data e a hora. Não inclui o texto da mensagem, o nome nem o número de quem enviou. Fica somente no seu celular.",
-                "• Contatos de confiança: nome, telefone e, se você quiser, o parentesco das pessoas que você cadastrar. Esses dados são digitados por você, ficam somente no seu celular e nunca são enviados ao servidor. Cadastre apenas pessoas que concordem em ajudar você.",
+                "• Histórico de alertas: para cada aviso mostrado, o nível de risco, a explicação, a orientação, a instituição citada na mensagem (se houver), se a mensagem veio do WhatsApp ou do WhatsApp Business, a data e a hora, e se você marcou o alerta como verificado ou como mensagem segura. Não inclui o texto da mensagem, o nome nem o número de quem enviou. Fica somente no seu celular.",
+                "• Contatos de confiança: nome, telefone e, se você quiser, o parentesco das pessoas que você cadastrar. Esses dados são digitados por você ou escolhidos por você na agenda do celular (nesse caso o aplicativo recebe apenas o nome e o telefone da pessoa escolhida), ficam somente no seu celular e nunca são enviados ao servidor. Cadastre apenas pessoas que concordem em ajudar você.",
+                "• Progresso no jogo de perguntas e instituições que você cadastrar: pontuação, sequência de dias jogados e os nomes e canais oficiais das instituições que você mesmo incluir. Ficam somente no seu celular.",
+                "• Identificador da instalação: na primeira vez que o aplicativo se conecta ao servidor, ele cria um código aleatório que identifica a instalação, para impedir uso abusivo do serviço. O servidor guarda apenas uma versão embaralhada (hash) desse código e as datas em que foi criado, usado pela última vez e desativado. Esse código não revela quem você é.",
                 "• Dados de conexão: ao enviar o texto para análise, o servidor recebe o endereço de rede (IP) do seu aparelho, como acontece em qualquer conexão com a internet.",
-                "Não coletamos seu nome, telefone, e-mail, localização, fotos, arquivos, áudio, câmera nem identificadores de publicidade, e não lemos a agenda de contatos do celular.",
-                "As mensagens podem conter, por acaso, dados pessoais sensíveis (como informações de saúde) ou dados de quem escreveu para você. O aplicativo não procura esses dados, não os usa para outra finalidade e trata o texto somente para classificar o risco de golpe. Ao aceitar esta Política, você autoriza esse tratamento."
+                "Não coletamos seu nome, telefone, e-mail, localização, fotos, arquivos, áudio, câmera nem identificadores de publicidade, e não lemos a agenda de contatos do celular; dela recebemos apenas o contato que você escolher para a lista de confiança.",
+                "As mensagens podem conter, por acaso, dados pessoais sensíveis (como informações de saúde) ou dados de quem escreveu para você. O aplicativo não procura esses dados, não os usa para outra finalidade e trata o texto somente para classificar o risco de golpe. Ao marcar a caixa de aceite, você dá seu consentimento específico para que esses dados, se aparecerem, sejam analisados apenas para detectar golpes (art. 11, inciso I, da LGPD)."
             )
         ),
 
@@ -155,7 +154,8 @@ object TextosLegais {
             "3. Para que usamos os dados e em que base legal",
             listOf(
                 "Usamos os dados para uma única finalidade: identificar sinais de golpe nas mensagens que você recebe e avisar você. Não usamos para publicidade, venda, perfil de consumo ou qualquer outra finalidade.",
-                "A base legal é o seu consentimento (art. 7º, inciso I, da LGPD), dado quando você marca as duas caixas e toca em “Aceitar e continuar”. Você pode revogá-lo quando quiser."
+                "A base legal é o seu consentimento (art. 7º, inciso I, da LGPD), dado quando você marca as duas caixas e toca em “Aceitar e continuar”. Para dados sensíveis que apareçam nas mensagens, vale o consentimento específico descrito na seção 2 (art. 11, inciso I). Você pode revogá-lo quando quiser.",
+                "As mensagens que você recebe também têm dados de quem as escreveu. Esse conteúdo é tratado com base no legítimo interesse de proteger você contra fraudes (art. 7º, inciso IX), usando o mínimo necessário: o nome de quem enviou não sai do celular e dados como CPF, cartão e telefone são escondidos antes do envio."
             )
         ),
 
@@ -175,8 +175,10 @@ object TextosLegais {
         SecaoLegal(
             "5. Com quem compartilhamos",
             listOf(
-                "• Servidor de análise: mantido pelo responsável pelo aplicativo. Recebe o texto protegido apenas para devolver a classificação ao aplicativo.",
-                "• Provedor de inteligência artificial: o servidor pode enviar o texto protegido a um serviço de IA de terceiros, que o trata apenas para classificar a mensagem (como operador, nos termos da LGPD).",
+                "• Servidor de análise: mantido pela equipe do projeto. Recebe o texto protegido apenas para devolver a classificação ao aplicativo.",
+                "• Cloudflare (Estados Unidos): faz a ligação segura entre o aplicativo e o servidor; os dados passam por ela durante o envio.",
+                "• OpenAI (Estados Unidos), modelo GPT-4o mini: recebe o texto protegido, sem os endereços dos links, apenas para classificar a mensagem (como operador, nos termos da LGPD). Segundo a OpenAI, os dados enviados pela API ficam guardados por até 30 dias para monitorar abusos e não são usados para treinar modelos.",
+                "• URLhaus, mantido pela abuse.ch (Suíça), e PhishTank (Estados Unidos): recebem apenas os endereços dos links, sem o resto da mensagem, para verificar se são conhecidos como perigosos.",
                 "Não vendemos nem cedemos seus dados para anunciantes ou outras empresas. Os dados só serão informados a autoridades se a lei exigir."
             )
         ),
@@ -184,15 +186,18 @@ object TextosLegais {
         SecaoLegal(
             "6. Transferência para fora do Brasil",
             listOf(
-                "Serviços de inteligência artificial costumam funcionar em outros países. Por isso, o texto protegido pode ser tratado fora do Brasil. O responsável se compromete a escolher provedores que ofereçam grau de proteção compatível com a LGPD (art. 33). Ao aceitar esta Política, você concorda com essa possibilidade."
+                "O texto protegido é tratado nos Estados Unidos (OpenAI e Cloudflare). Os endereços dos links são verificados nos Estados Unidos (PhishTank) e na Suíça (URLhaus). Esses países podem ter regras de proteção de dados diferentes das do Brasil.",
+                "Essa transferência se baseia no seu consentimento específico (art. 33, inciso VIII, da LGPD), dado ao marcar a caixa de aceite da Política de Privacidade, que cita esses países. Sem ele, o aplicativo não pode enviar mensagens para análise."
             )
         ),
 
         SecaoLegal(
             "7. Por quanto tempo guardamos",
             listOf(
-                "• No celular: o aplicativo não grava o conteúdo das mensagens. Ele guarda apenas as suas opções, o registro do aceite, o histórico de alertas (só o nível de risco, a explicação, a orientação e a data e hora do aviso — sem o texto da mensagem, o nome ou o número de quem enviou) e os contatos de confiança que você cadastrar, até você revogar o consentimento, limpar os dados do aplicativo ou desinstalá-lo. Você também pode apagar alertas a qualquer momento na tela “Histórico de alertas” e remover contatos na tela “Contatos de confiança”.",
-                "• No servidor de análise: " + DadosLegais.RETENCAO_NO_SERVIDOR
+                "• No celular: o aplicativo não grava o conteúdo das mensagens. Ele guarda apenas as suas opções, o registro do aceite, o histórico de alertas (o nível de risco, a explicação, a orientação, a instituição citada, a origem, a data e hora do aviso e a sua marcação — sem o texto da mensagem, o nome ou o número de quem enviou), o progresso no jogo de perguntas, as instituições e os contatos de confiança que você cadastrar, até você revogar o consentimento, limpar os dados do aplicativo ou desinstalá-lo. Você também pode apagar alertas a qualquer momento na tela “Histórico de alertas” e remover contatos na tela “Contatos de confiança”.",
+                "• No servidor de análise: " + DadosLegais.RETENCAO_NO_SERVIDOR,
+                "• Identificador da instalação: apagado do servidor depois de 3 meses sem uso, inclusive se você revogar o consentimento ou desinstalar o aplicativo.",
+                "• Na OpenAI: até 30 dias, para monitoramento de abusos, conforme a política do provedor."
             )
         ),
 
@@ -223,7 +228,7 @@ object TextosLegais {
                 "• O conteúdo das mensagens não é gravado no celular.",
                 "• O histórico de alertas e os contatos de confiança ficam só no celular e não entram no backup na nuvem.",
                 "• O aplicativo pede só as permissões de que precisa e ignora na hora as notificações de outros aplicativos.",
-                "Nenhum sistema é totalmente seguro. Se ocorrer um incidente que possa causar risco ou dano relevante a você, comunicaremos você e a ANPD, conforme a LGPD (art. 48)."
+                "Nenhum sistema é totalmente seguro. Se ocorrer um incidente que possa causar risco ou dano relevante a você, comunicaremos você e a ANPD, conforme a LGPD (art. 48) e no prazo da Resolução CD/ANPD nº 15/2024."
             )
         ),
 
